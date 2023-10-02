@@ -1,3 +1,10 @@
+#!/bin/bash
+#SBATCH --error=%J.err
+#SBATCH --output=%J.out
+#SBATCH -J gatk
+#SBATCH -p slim18 
+#SBATCH --mem-per-cpu 64000 
+
 # --------------------------------------------------
 # Running VarTrix
 # --------------------------------------------------
