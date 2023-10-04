@@ -32,6 +32,7 @@ samtools sort -o "./bam_debug/"$name"/possorted_rmdup_sort.bam" "./bam_debug/"$n
 # build index
 java -jar ../../tools/picard/picard.jar BuildBamIndex \
 I= "./bam_debug/"$name"/possorted_rmdup_sort.bam" \
+O= "./bam_debug/"$name"/possorted_rmdup_sort.bam.bai"
 VALIDATION_STRINGENCY=LENIENT
 
 
