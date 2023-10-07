@@ -9,5 +9,5 @@ source /home/dhlushchenko/miniconda3/etc/profile.d/conda.sh
 conda activate thesis-env
 
 java -jar /work/project/ladcol_014/thesis_cnvcalling/tools/picard/picard.jar CreateSequenceDictionary \ 
-      R=genome.fa \ 
-      O=genome.dict
+      R=hg38.fa \ 
+      O=hg38.dict
