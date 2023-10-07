@@ -9,17 +9,19 @@ source /home/dhlushchenko/miniconda3/etc/profile.d/conda.sh
 conda activate thesis-env
 name=SNU601
 
+mkdir ".bam/"
+mkdir ".vcf/"
 mkdir "./bam/"$name
 mkdir "./vcf/"$name
 
 java -jar ../../tools/picard/picard.jar SortSam \
       I=possorted_new_header.bam \
-      O=bam/sorted_bam.bam \
+      O="./bam/"$name"/sorted_bam.bam" \
       SORT_ORDER=coordinate
 
 #rm.dup
 java -jar ../../tools/picard/picard.jar MarkDuplicates \
-I= "bam/sorted_bam.bam" \
+I= "./bam/"$name"/sorted_bam.bam" \
 O= "./bam/"$name"/possorted_rmdup.bam" \
 M= "./bam/"$name"/possorted_rmdup_marked_dup_metics.txt" \
 REMOVE_DUPLICATES=true \
@@ -46,7 +48,7 @@ VALIDATION_STRINGENCY=LENIENT
 
 
 gatk --java-options "-Xmx4g" HaplotypeCaller \
--R "/work/project/ladcol_004/epiAneufinder/ReferenceBWA/hg38_genome.fa" \
+-R "./hg38.fa" \
 -I "./bam/"$name"/possorted_rmdup_sort.bam" \
 -O "./vcf/"$name"/possorted_rmdup_sort.hc.vcf.gz"
 
