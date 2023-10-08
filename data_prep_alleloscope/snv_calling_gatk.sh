@@ -49,8 +49,8 @@ VALIDATION_STRINGENCY=LENIENT
 
 gatk --java-options "-Xmx4g" HaplotypeCaller \
 -R "./hg38.fa" \
--I "/bam/"$name"/possorted_rmdup_sort.bam" \
--O "/vcf/"$name"/possorted_rmdup_sort.hc.vcf.gz"
+-I "./bam/"$name"/possorted_rmdup_sort.bam" \
+-O "./vcf/"$name"/possorted_rmdup_sort.hc.vcf.gz"
 
 ## decompress file
 gunzip "./vcf/"$name"/possorted_rmdup_sort.hc.vcf.gz"
