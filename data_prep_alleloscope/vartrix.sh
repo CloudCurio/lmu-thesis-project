@@ -20,7 +20,7 @@ mkdir chr
 for chr in {1..22};
 do
 	mkdir chr/chr"$chr"_matrix
-	../../tools/VarTrix/vartrix_linux -v "./vcf/SNU601/chr"$chr".vcf" -b ./bam/SNU601/possorted_rmdup_sort.bam -f /work/project/ladcol_005/genomes/hg38_ATAC/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/fasta/genome.fa -c /work/project/ladcol_010/benchmark_scrna_cnv_caller/data/input_SNU601/barcodes.tsv.gz -s "coverage"	
+	../../tools/VarTrix/vartrix_linux -v "./vcf/SNU601/chr"$chr".vcf" -b ./bam/SNU601/possorted_rmdup_sort.bam -f ./hg38.fa -c /work/project/ladcol_010/benchmark_scrna_cnv_caller/data/input_SNU601/barcodes.tsv.gz -s "coverage"	
 	mv out_matrix.mtx chr/chr"$chr"_matrix/out_matrix.mtx
 	mv ref_matrix.mtx chr/chr"$chr"_matrix/ref_matrix.mtx
 done
