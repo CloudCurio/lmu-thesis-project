@@ -12,7 +12,7 @@ name=SNU601
 module load ngs/samtools/1.9
 
 gatk --java-options "-Xmx4g" HaplotypeCaller \
--R "./hg38.fa" \
+-R "./hg38/hg38.fa" \
 -I "./bam/"$name"/possorted_rmdup_sort.bam" \
 -O "./vcf/"$name"/possorted_rmdup_sort.hc.vcf.gz"
 
