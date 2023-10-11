@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --error=%J.err
-#SBATCH --output=%J.out
-#SBATCH -J gatk
-#SBATCH -p slim18 
-#SBATCH --mem-per-cpu 64000 
+#SBATCH --error="gatk_hc"%J".err"
+#SBATCH --output="gatk_hc"%J".out"
+#SBATCH -J gatk_hc_only
+#SBATCH -p fat 
+#SBATCH --mem-per-cpu 80000
 
 source /home/dhlushchenko/miniconda3/etc/profile.d/conda.sh
 conda activate thesis-env
