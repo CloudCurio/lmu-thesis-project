@@ -32,10 +32,7 @@ module load ngs/samtools/1.9
 samtools sort -o "./bam/"$name"/possorted_rmdup_sort.bam" "./bam/"$name"/possorted_rmdup.bam"
 
 # build index
-java -jar ../../tools/picard/picard.jar BuildBamIndex \
-I= "./bam/"$name"/possorted_rmdup_sort.bam" \
-VALIDATION_STRINGENCY=LENIENT
-
+samtools index "./bam/"$name"/possorted_rmdup_sort.bam" -o "./bam/"$name"/possorted_rmdup_sort.bam.bai"
 
 # mutation calling
 #gatk Mutect2 \
