@@ -53,3 +53,8 @@ Gen_bin_cell_atac=function(bin_bed=NULL, barcodes=NULL, path_to_fragments="./fra
   saveRDS(mm,paste0(out_path,"/bin_cell_atac_fragments.rds"))
   return(mm)
 }
+
+Gen_bin_cell_atac(bin_bed = "./hg38.100Kb.windows.sorted.bed",
+                  barcodes = "./barcodes.tsv.gz",
+                  path_to_fragments = "./fragments.tsv",
+                  out_path = "./bin_by_cell_mtx")
