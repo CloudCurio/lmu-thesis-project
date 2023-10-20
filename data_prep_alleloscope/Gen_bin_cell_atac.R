@@ -12,6 +12,9 @@
 #'
 #' @export
 ## generate bed files for the bins
+
+library(rtracklayer)
+
 Gen_bin_cell_atac=function(bin_bed=NULL, barcodes=NULL, path_to_fragments="./fragments.tsv.gz", out_path="./" ){
   # generate bin by cell matrix from fragment file
   barcodes=barcodes[,1]
@@ -54,7 +57,7 @@ Gen_bin_cell_atac=function(bin_bed=NULL, barcodes=NULL, path_to_fragments="./fra
   return(mm)
 }
 
-Gen_bin_cell_atac(bin_bed = "./hg38.100Kb.windows.sorted.bed",
-                  barcodes = "./barcodes.tsv.gz",
+Gen_bin_cell_atac(bin_bed = fread("./hg38.100Kb.windows.sorted.bed"),
+                  barcodes = fread("./barcodes.tsv.gz"),
                   path_to_fragments = "./fragments.tsv",
                   out_path = "./bin_by_cell_mtx")
