@@ -14,13 +14,14 @@
 ## generate bed files for the bins
 
 library(rtracklayer)
+library(data.table)
 
 Gen_bin_cell_atac=function(bin_bed=NULL, barcodes=NULL, path_to_fragments="./fragments.tsv.gz", out_path="./" ){
   # generate bin by cell matrix from fragment file
   barcodes=barcodes[,1]
   
   cat("Read fragment file...\n")
-  fragments <- import.bed(path_to_fragments, extraCols = c( "type"="character", "type"="integer"))
+  fragments <- fread(path_to_fragments, extraCols = c( "type"="character", "type"="integer"))
   colnames(mcols(fragments)) <- c("barcode", "dup_counts")
   
   cat(paste0("Total ", length(fragments)," fragments.\n"))
