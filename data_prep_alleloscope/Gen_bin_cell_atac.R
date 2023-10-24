@@ -21,8 +21,7 @@ Gen_bin_cell_atac=function(bin_bed=NULL, barcodes=NULL, path_to_fragments="./fra
   barcodes=barcodes[,1]
   
   cat("Read fragment file...\n")
-  fragments <- fread(path_to_fragments, #extraCols = c( "type"="character", "type"="integer")
-                     )
+  fragments <- fread(path_to_fragments, extraCols = c( "type"="character", "type"="integer"))
   colnames(mcols(fragments)) <- c("barcode", "dup_counts")
   
   cat(paste0("Total ", length(fragments)," fragments.\n"))
