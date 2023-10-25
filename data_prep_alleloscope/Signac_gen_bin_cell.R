@@ -7,3 +7,4 @@ names(chrom_sizes) <- sizes_file$V1
 mtx <- GenomeBinMatrix(fragments = "./fragments.tsv",
                        genome = chrom_sizes,
                        binsize = 100000)
+write.table(mtx, file = "100k_fragments_sub.txt")
