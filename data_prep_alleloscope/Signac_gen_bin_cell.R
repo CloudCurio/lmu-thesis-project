@@ -9,7 +9,7 @@ barcodes<-read.table("barcodes.tsv.gz")
 tmp <- CreateFragmentObject(path="fragments.tsv.gz",
                             cells=barcodes$V1)
 
-mtx <- GenomeBinMatrix(fragments = "./fragments.tsv",
+mtx <- GenomeBinMatrix(fragments = list(tmp),
                        genome = chrom_sizes,
                        binsize = 100000)
 write.table(mtx, file = "100k_fragments_sub.txt")
