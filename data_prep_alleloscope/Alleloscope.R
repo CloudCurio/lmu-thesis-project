@@ -57,7 +57,7 @@ Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_sta
 
 # Recommend max_nSNP <50000
 # Regions without allelic imbalence do not coverge (Reach the max number of iterations.)
-
+print("Estimation done!")
 ################################################################################
 #Identify/Assign normal cells and diploid regions
 ################################################################################
@@ -66,7 +66,7 @@ Obj_filtered$ref=Obj_filtered$seg_table_filtered$chrr[7] # choose one normal reg
 
 #Optional: assign "normal cells" from scATAC-seq genome-wide peak signals
 #Obj_filtered$select_normal$barcode_normal=cell_type[which(cell_type[,2]!='tumor'),1]
-
+print("Cells assigned!")
 ################################################################################
 #Genotype each cell in each region
 ################################################################################
@@ -76,7 +76,7 @@ Obj_filtered=Genotype_value(Obj_filtered = Obj_filtered, type='tumor', raw_count
 
 #Genotype all cells and generate a genotype plot for each region
 Obj_filtered=Genotype(Obj_filtered = Obj_filtered, cell_type=cell_type, xmax=3)
-
+print("Genotyping done!")
 ################################################################################
 #Construct lineage structure using cell major haplotype proportions 
 #for each cell across all regions
@@ -89,7 +89,7 @@ tmp=Select_normal(Obj_filtered = Obj_filtered,
                   cell_type = cell_type, 
                   mincell = 0)
 rm(tmp)
-
+print("Lineages constructed! Done!")
 ################################################################################
 #Potential downstream analysis
 ################################################################################
