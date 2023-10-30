@@ -23,7 +23,7 @@ ref_all=readRDS("..//data//SNU601_scATACseq//vartrix_out//ref_all.rds")
 var_all=readRDS("..//data//SNU601_scATACseq//vartrix_out//var_all.rds")
 
 # bin by cell matrices for tumor and normal for segmentation
-raw_counts=read.table('..//data//SNU601_scATACseq//bin_by_cell_mtx//100k_fragments_sub.txt', sep='\t', header=T, row.names = 1,stringsAsFactors = F)
+raw_counts=read.table('..//data//SNU601_scATACseq//bin_by_cell_mtx//100k_fragments_sub.txt', sep=' ', header=T, row.names = 1,stringsAsFactors = F)
 colnames(raw_counts)=gsub("[.]","-", colnames(raw_counts))
 
 #Optional: read known cell identity from peaks + visualization:
