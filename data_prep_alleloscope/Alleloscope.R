@@ -34,11 +34,19 @@ colnames(raw_counts)=gsub("[.]","-", colnames(raw_counts))
 #Create an Alleloscope object for analysis
 ################################################################################
 
-Obj=Createobj(alt_all =alt_all, ref_all = ref_all, var_all = var_all ,samplename='Sample', genome_assembly="GRCh37", dir_path=dir_path, barcodes=barcodes, size=size, assay='scATACseq')
+Obj=Createobj(alt_all =alt_all, ref_all = ref_all, var_all = var_all,
+              samplename='Sample', 
+              genome_assembly="GRCh38", 
+              dir_path=dir_path, 
+              barcodes=barcodes, 
+              size=size, 
+              assay='scATACseq')
 #filter out cells and SNPs with too few read counts
-Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1, max_vaf = 0.9) 
+Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1, 
+                           max_vaf = 0.9) 
 
-# suggest setting min_vaf=0.1 and max_vaf=0.9 when SNPs are called in the tumor sample for higher confident SNPs
+# suggest setting min_vaf=0.1 and max_vaf=0.9 when SNPs are called in the tumor 
+# sample for higher confident SNPs
 
 ################################################################################
 #Unbiased segmentation based on matched WES/WGS data
@@ -46,7 +54,7 @@ Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1, 
 
 Obj_filtered$seg_table=readRDS("..//data//SNU601_scATACseq//seg_table_filtered_SNU601.rds")
 
-Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500)
+#Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500,len=0) - figure out later
 
 ################################################################################
 #Estimate cell major haplotype proportion for each region
