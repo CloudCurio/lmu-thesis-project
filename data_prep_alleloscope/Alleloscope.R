@@ -83,7 +83,8 @@ print("Cells assigned!")
 Obj_filtered=Genotype_value(Obj_filtered = Obj_filtered, type='tumor', raw_counts=raw_counts, cov_adj=1)  # for tumor
 
 #Genotype all cells and generate a genotype plot for each region
-Obj_filtered=Genotype(Obj_filtered = Obj_filtered, cell_type=cell_type, xmax=3)
+Obj_filtered=Genotype(Obj_filtered = Obj_filtered, #cell_type=cell_type, 
+                      xmax=3)
 print("Genotyping done!")
 ################################################################################
 #Construct lineage structure using cell major haplotype proportions 
@@ -94,7 +95,7 @@ print("Genotyping done!")
 tmp=Select_normal(Obj_filtered = Obj_filtered, 
                   raw_counts=raw_counts, 
                   plot_theta = TRUE, 
-                  cell_type = cell_type, 
+                  #cell_type = cell_type, 
                   mincell = 0)
 rm(tmp)
 print("Lineages constructed! Done!")
