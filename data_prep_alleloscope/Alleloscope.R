@@ -52,20 +52,22 @@ Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1,
 #Unbiased segmentation based on matched WES/WGS data
 ################################################################################
 
-Obj_filtered$seg_table=readRDS("..//data//SNU601_scATACseq//seg_table_filtered_SNU601.rds")
+input_table<-readRDS("..//data//SNU601_scATACseq//seg_table_filtered_SNU601.rds")
+input_table<-input_table[,c("chr","start","end","length")]
+Obj_filtered$seg_table<-input_table
 
-#Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500,len=0) - figure out later
+Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500)
 
 ################################################################################
 #Estimate cell major haplotype proportion for each region
 ################################################################################
 
-#eatimates theta_hat for each cell of each region in seg_table_filtered
+#estimates theta_hat for each cell of each region in seg_table_filtered
 Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
 
 # Recommend max_nSNP <50000
 # Regions without allelic imbalence do not coverge (Reach the max number of iterations.)
-print("Estimation done!")
+
 ################################################################################
 #Identify/Assign normal cells and diploid regions
 ################################################################################
@@ -74,18 +76,25 @@ Obj_filtered$ref=Obj_filtered$seg_table_filtered$chrr[7] # choose one normal reg
 
 #Optional: assign "normal cells" from scATAC-seq genome-wide peak signals
 #Obj_filtered$select_normal$barcode_normal=cell_type[which(cell_type[,2]!='tumor'),1]
-print("Cells assigned!")
+
 ################################################################################
 #Genotype each cell in each region
 ################################################################################
 
+#Select normal cells
+Obj_filtered=Select_normal(Obj_filtered = Obj_filtered, 
+                           raw_counts=raw_counts, plot_theta = TRUE)
 #Estimate cell-specific (rho-hat, theta-hat) values for each region
-Obj_filtered=Genotype_value(Obj_filtered = Obj_filtered, type='tumor', raw_counts=raw_counts, cov_adj=1)  # for tumor
+Obj_filtered=Genotype_value(Obj_filtered = Obj_filtered, type='tumor', 
+                            raw_counts=raw_counts, cov_adj=1,
+                            ref_gtv = NULL,mincell = NULL,
+                            qt_filter = TRUE,cell_filter = TRUE,
+                            refr = TRUE,cov_only = FALSE)  # for tumor
 
 #Genotype all cells and generate a genotype plot for each region
 Obj_filtered=Genotype(Obj_filtered = Obj_filtered, #cell_type=cell_type, 
                       xmax=3)
-print("Genotyping done!")
+
 ################################################################################
 #Construct lineage structure using cell major haplotype proportions 
 #for each cell across all regions
