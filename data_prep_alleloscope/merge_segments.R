@@ -42,4 +42,4 @@ for (bin in 1:nrow(epiAneufinder_res)){
   }
 }
 
-save(seg_table, ".//seg_table_epiAneuFinder_SNU601.rds")
+saveRDS(seg_table, "seg_table_epiAneuFinder_SNU601.rds")
