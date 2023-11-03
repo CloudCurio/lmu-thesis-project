@@ -6,7 +6,7 @@ gain_thresh <- 1.5
 #set the path and load the input file
 setwd(wd_path)
 
-epiAneufinder_res <- read.table(".\\SNU601_br7_epiAneufinder_results_table.tsv", 
+epiAneufinder_res <- read.table("SNU601_br7_epiAneufinder_results_table.tsv", 
                                 header = T)
 
 #get mean scores for each region and label the 
