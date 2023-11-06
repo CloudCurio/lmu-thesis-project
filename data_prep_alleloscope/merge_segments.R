@@ -1,4 +1,5 @@
-wd_path <- "//work//project//ladcol_014//thesis_cnvcalling//data//SNU601_scATACseq"
+#wd_path <- "//work//project//ladcol_014//thesis_cnvcalling//data//SNU601_scATACseq"
+wd_path <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data"
 
 loss_thresh <- 0.5
 gain_thresh <- 1.5
@@ -41,5 +42,8 @@ for (bin in 1:nrow(epiAneufinder_res)){
     seg_table$length[nrow(seg_table)] <- seg_table$end[nrow(seg_table)]-seg_table$start[nrow(seg_table)]+1
   }
 }
+
+#change chromosome notations to numbers
+seg_table$chr <- gsub("chr", "", seg_table$chr)
 
 saveRDS(seg_table, "seg_table_epiAneuFinder_SNU601.rds")

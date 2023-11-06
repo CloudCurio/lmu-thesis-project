@@ -52,7 +52,7 @@ Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1,
 #Unbiased segmentation based on matched WES/WGS data
 ################################################################################
 
-input_table<-readRDS("..//data//SNU601_scATACseq////seg_table_epiAneuFinder_SNU601.rds")
+input_table<-readRDS("..//data//SNU601_scATACseq////seg_table_chr3_epiAneuFinder_SNU601.rds")
 input_table<-input_table[,c("chr","start","end","length")]
 Obj_filtered$seg_table<-input_table
 
@@ -67,7 +67,7 @@ Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_sta
 
 # Recommend max_nSNP <50000
 # Regions without allelic imbalence do not coverge (Reach the max number of iterations.)
-
+print("Theta-hat obtained")
 ################################################################################
 #Identify/Assign normal cells and diploid regions
 ################################################################################
