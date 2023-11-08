@@ -52,7 +52,7 @@ Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1,
 #Unbiased segmentation based on matched WES/WGS data
 ################################################################################
 
-input_table<-readRDS("..//data//SNU601_scATACseq////seg_table_epiAneuFinder_SNU601.rds")
+input_table<-readRDS("..//data//SNU601_scATACseq////seg_table_chr19_bins_SNU601.rds")
 input_table<-input_table[,c("chr","start","end","length")]
 Obj_filtered$seg_table<-input_table
 
@@ -72,28 +72,28 @@ print("Theta-hat obtained")
 #Identify/Assign normal cells and diploid regions
 ################################################################################
 
-Obj_filtered$ref=Obj_filtered$seg_table_filtered$chrr[7] # choose one normal region
+#Obj_filtered$ref=Obj_filtered$seg_table_filtered$chrr[7] # choose one normal region
 
-#Optional: assign "normal cells" from scATAC-seq genome-wide peak signals
-#Obj_filtered$select_normal$barcode_normal=cell_type[which(cell_type[,2]!='tumor'),1]
+##Optional: assign "normal cells" from scATAC-seq genome-wide peak signals
+##Obj_filtered$select_normal$barcode_normal=cell_type[which(cell_type[,2]!='tumor'),1]
 
 ################################################################################
 #Genotype each cell in each region
 ################################################################################
 
 #Select normal cells
-Obj_filtered=Select_normal(Obj_filtered = Obj_filtered, 
-                           raw_counts=raw_counts, plot_theta = TRUE)
+#Obj_filtered=Select_normal(Obj_filtered = Obj_filtered, 
+#                           raw_counts=raw_counts, plot_theta = TRUE)
 #Estimate cell-specific (rho-hat, theta-hat) values for each region
-Obj_filtered=Genotype_value(Obj_filtered = Obj_filtered, type='tumor', 
-                            raw_counts=raw_counts, cov_adj=1,
-                            ref_gtv = NULL,mincell = NULL,
-                            qt_filter = TRUE,cell_filter = TRUE,
-                            refr = TRUE,cov_only = FALSE)  # for tumor
+#Obj_filtered=Genotype_value(Obj_filtered = Obj_filtered, type='tumor', 
+#                            raw_counts=raw_counts, cov_adj=1,
+#                            ref_gtv = NULL,mincell = NULL,
+#                            qt_filter = TRUE,cell_filter = TRUE,
+#                            refr = TRUE,cov_only = FALSE)  # for tumor
 
 #Genotype all cells and generate a genotype plot for each region
-Obj_filtered=Genotype(Obj_filtered = Obj_filtered, #cell_type=cell_type, 
-                      xmax=3)
+#Obj_filtered=Genotype(Obj_filtered = Obj_filtered, #cell_type=cell_type, 
+#                      xmax=3)
 
 ################################################################################
 #Construct lineage structure using cell major haplotype proportions 
@@ -101,13 +101,13 @@ Obj_filtered=Genotype(Obj_filtered = Obj_filtered, #cell_type=cell_type,
 ################################################################################
 
 #Generate lineage tree based on cell-specific genotypes across the regions
-tmp=Select_normal(Obj_filtered = Obj_filtered, 
-                  raw_counts=raw_counts, 
-                  plot_theta = TRUE, 
-                  #cell_type = cell_type, 
-                  mincell = 0)
-rm(tmp)
-print("Lineages constructed! Done!")
+# tmp=Select_normal(Obj_filtered = Obj_filtered, 
+#                   raw_counts=raw_counts, 
+#                   plot_theta = TRUE, 
+#                   #cell_type = cell_type, 
+#                   mincell = 0)
+# rm(tmp)
+# print("Lineages constructed! Done!")
 ################################################################################
 #Potential downstream analysis
 ################################################################################
