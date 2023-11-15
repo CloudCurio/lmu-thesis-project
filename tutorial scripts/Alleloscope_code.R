@@ -5,6 +5,16 @@ setwd("//work//project//ladcol_014//thesis_cnvcalling//lmu-thesis-project") # se
 dir_path <- "//work//project//ladcol_014//thesis_cnvcalling//output//" 
 dir.create(dir_path) # set up output directory
 
+seg_table_path <- "//work//project//ladcol_014//thesis_cnvcalling//data//SNU601_scATACseq//seg_tables//seg_table_500k_epiAneuFinder_SNU601.rds"
+
+#check if batch run is requested (currently only chr batch runs are implemented, more options to come)
+batch_load <- "chr"
+#safeguard:
+batch_options <- c("no", "chr")
+if (!(batch_load %in% batch_options)){
+  stop('Incorrect batch parameter value. Batch parameter can be "no" or "chr"')
+}
+
 ################################################################################
 #Load the input files
 ################################################################################
@@ -52,7 +62,7 @@ Obj_filtered=Matrix_filter(Obj=Obj, cell_filter=5, SNP_filter=5, min_vaf = 0.1,
 #Unbiased segmentation based on matched WES/WGS data
 ################################################################################
 
-input_table<-readRDS("..//data//SNU601_scATACseq////seg_table_chr19_bins_SNU601.rds")
+input_table<-readRDS(seg_table_path)
 input_table<-input_table[,c("chr","start","end","length")]
 Obj_filtered$seg_table<-input_table
 
