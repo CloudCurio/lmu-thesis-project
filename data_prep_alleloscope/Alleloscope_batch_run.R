@@ -6,7 +6,8 @@ seg_table_path <- "..//data//SNU601_scATACseq//seg_tables//seg_table_500k_epiAne
 input_table<-readRDS(seg_table_path)
 input_table<-input_table[,c("chr","start","end","length")]
 
-for (chr in unique(input_table$chr)){
+#for (chr in unique(input_table$chr)){
+for (chr in c(19, 20, 21)){
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
                                    "alleloscope_batch//chr", chr),
                   seg_table = input_table[input_table$chr == chr,])
