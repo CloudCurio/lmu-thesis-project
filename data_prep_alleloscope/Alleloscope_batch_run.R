@@ -9,14 +9,14 @@ input_table<-input_table[,c("chr","start","end","length")]
 #for (chr in unique(input_table$chr)){
 for (chr in c(19, 20, 21)){
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
-                                   "alleloscope_batch//chr", chr),
+                                   "alleloscope_batch//chr", chr, sep = ''),
                   seg_table = input_table[input_table$chr == chr,])
   file.rename(from = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
-                    "alleloscope_batch//chr", chr, "//rds//theta_N_seg.rds"), 
+                    "alleloscope_batch//chr", chr, "//rds//theta_N_seg.rds", sep = ''), 
               to = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
-                         "alleloscope_batch//chr", chr, "//theta_N_seg.rds"))
+                         "alleloscope_batch//chr", chr, "//theta_N_seg.rds", sep = ''))
   unlink(paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
-               "alleloscope_batch//chr", chr, "//rds//"), recursive = TRUE)
+               "alleloscope_batch//chr", chr, "//rds//", sep = ''), recursive = TRUE)
   unlink(paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
-               "alleloscope_batch//chr", chr, "//plots//"), recursive = TRUE)       
+               "alleloscope_batch//chr", chr, "//plots//", sep = ''), recursive = TRUE)       
 }

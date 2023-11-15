@@ -52,9 +52,9 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
                       sep='\t', 
                       stringsAsFactors = F, 
                       header=F)
-  alt_all=readRDS(paste(vartrix_output_path, "alt_all.rds"))
-  ref_all=readRDS(paste(vartrix_output_path, "ref_all.rds"))
-  var_all=readRDS(paste(vartrix_output_path, "var_all.rds"))
+  alt_all=readRDS(paste(vartrix_output_path, "alt_all.rds", sep = ''))
+  ref_all=readRDS(paste(vartrix_output_path, "ref_all.rds", sep = ''))
+  var_all=readRDS(paste(vartrix_output_path, "var_all.rds", sep = ''))
   
   # bin by cell matrices for tumor and normal for segmentation
   raw_counts=read.table(raw_counts_path, sep=' ', header=T, row.names = 1,stringsAsFactors = F)
