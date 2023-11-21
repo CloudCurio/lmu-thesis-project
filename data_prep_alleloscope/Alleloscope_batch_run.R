@@ -12,7 +12,8 @@ input_table<-input_table[,c("chr","start","end","length")]
 for (chr in c(1)){
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
                                    "Alleloscope_batch//chr", chr, sep = ''),
-                  seg_table = input_table[input_table$chr == chr,])
+                  seg_table = input_table[input_table$chr == chr,],
+                  chr_size_path = "..//data//SNU601_scATACseq//hg38//chrom.sizes_chr1 only.txt")
   # file.rename(from = paste("//work//project//ladcol_014//thesis_cnvcalling//output//Alleloscope_batch//chr", 
   #                          chr, "//rds//theta_N_seg.rds", sep = ''), 
   #             to = paste("//work//project//ladcol_014//thesis_cnvcalling//output//Alleloscope_batch//chr", 
