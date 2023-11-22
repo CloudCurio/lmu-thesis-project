@@ -86,7 +86,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   #Unbiased segmentation based on matched WES/WGS data
   ################################################################################
 
-  Obj_filtered$seg_table<-input_table
+  Obj_filtered$seg_table<-seg_table
   
   Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500, len = 100000)
   
