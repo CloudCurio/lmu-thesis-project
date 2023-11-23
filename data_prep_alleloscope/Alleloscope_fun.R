@@ -1,13 +1,13 @@
 ################################################################################
 #This function runs Alleloscope and is intended to be used for batch runs
 #'@param wd path to where the working directory should be set up. Standard parameter
-# values are built in relation to this directory.
+#'values are built in relation to this directory.
 #'@param dir_path path to where the output directory should be created.
 #'For batch runs it is recommended that dir_path is different between iterations.
 #'@param chr_size_path path to the table with chr sizes.
 #'@param barcodes_path path to the barcodes file.
 #'@param vartrix_output_path path to the folder where three vartrix output .rds files
-# (alt_all, ref_all and var_all) are stored.
+#'(alt_all, ref_all and var_all) are stored.
 #'@param raw_counts_path path to the raw counts file.
 #'@param seg_table segmentation table to be used. NOT a path, but a dataframe,
 #'containing four columns: chr, start, end and length.
@@ -28,8 +28,9 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   
   dir.create(dir_path) # set up output directory
   
+  #check the seg_table parameter for correctness
   if(is.null(seg_table)){
-    stop("Set a path to the segmentation table")
+    stop("Segmentation table not selected")
   } else if (!is.data.frame(seg_table)){
     stop("seg_table must be a data frame")
   } else if (colnames(seg_table) != c("chr", "start", "end", "length")){
