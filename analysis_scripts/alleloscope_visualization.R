@@ -20,8 +20,6 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
                              chrom = NULL,
                              seg_table = NULL,
                              out_dir = paste(chrom, "//summary_plots", sep = "")){
-  
-  
   #load libraries
   library(ggplot2)
   
@@ -43,7 +41,7 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   }
   
   #read Alleloscope output files
-  files_to_read <- list.files(path = paste(chrom, "\\rds\\EMresults", sep = ""), 
+  files_to_read <- list.files(path = paste("chr", chrom, "\\rds\\EMresults", sep = ""), 
                               pattern = "\\.rds$", full.names = T)
   all_frags <- list()
   all_frags <- lapply(files_to_read,function(x) {
