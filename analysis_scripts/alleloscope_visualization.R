@@ -60,6 +60,10 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   colnames(frag_summary) <- c("chr", "start", "theta_hat_avg")
   
   #split names and starting positions
+  print(length(names))
+  print(length(all_frags))
+  print(files_to_read)
+  
   split_names <- strsplit(names(all_frags), "_")
   chr <- c()
   start <- c()
