@@ -41,6 +41,7 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
       stop('seg_table must have columns "chr", "start", "end" and "length')
     }
   print("debug 1")
+  print(paste(chrom, "\\rds\\EMresults", sep = ""))
   
   #read Alleloscope output files
   files_to_read <- list.files(path = paste(chrom, "\\rds\\EMresults", sep = ""), 
