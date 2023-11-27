@@ -40,7 +40,7 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   } else {
       stop('seg_table must have columns "chr", "start", "end" and "length')
     }
-  
+  print("debug 1")
   
   #read Alleloscope output files
   files_to_read <- list.files(path = paste(chrom, "\\rds\\EMresults", sep = ""), 
@@ -64,10 +64,14 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   chr <- c()
   start <- c()
   
+  print("debug 2")
+  
   for (i in 1:length(split_names)){
     chr <- append(chr, split_names[[i]][1])
     start <- append(start, split_names[[i]][2])
   }
+  
+  print("debug 3")
   
   #remove "chr" from chromosome identifiers
   chr <- gsub("chr", "", chr)
@@ -80,9 +84,13 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
     frag_summary$theta_hat_avg[frag] <- mean(mean(unlist(all_frags[[frag]]["theta_hat"])))  
   }
   
+  print("debug 4")
+  
   #merge Alleloscope output with the segmentation table to obtain EpiAneufinder-predicted cnv states (as well as more complete size metrics)
   frag_summary <- merge(frag_summary, seg_table)
   frag_summary <- frag_summary[order(frag_summary$chr, frag_summary$start),]
+  
+  print("debug 5")
   
   #visualize the distribution of mean theta hat values
   dir.create(out_dir)
