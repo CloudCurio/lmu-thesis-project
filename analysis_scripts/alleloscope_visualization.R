@@ -7,7 +7,8 @@
 #'@param wd path to where the output folder of Alleloscope_batch_run.R. chr
 #'folders are there.
 #'@param chrom chromosome number for batch runs. Allows to perform analysis by
-#'chromosome.
+#'chromosome. Correct form for this parameter is "chr", followed by a number 
+#'(e.g., "chr1").
 #'@param seg_table segmentation table used by Alleloscope. When used in batch
 #'analysis, only a subset for a particular chromosome is taken.
 #'@param out_dir path to where the output folder should be created. By default,
@@ -42,7 +43,7 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   
   
   #read Alleloscope output files
-  files_to_read <- list.files(path = paste("chr", chrom, "\\rds\\EMresults", sep = ""), 
+  files_to_read <- list.files(path = paste(chrom, "\\rds\\EMresults", sep = ""), 
                               pattern = "\\.rds$", full.names = T)
   all_frags <- list()
   all_frags <- lapply(files_to_read,function(x) {

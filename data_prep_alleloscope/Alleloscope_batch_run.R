@@ -1,5 +1,6 @@
 setwd("//work//project//ladcol_014//thesis_cnvcalling//lmu-thesis-project")
 #setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data")
+
 source("data_prep_alleloscope//Alleloscope_fun.R")
 source("analysis_scripts//alleloscope_visualization.R")
 
@@ -14,7 +15,7 @@ for (chr in c(1:22)){
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
                                    "Alleloscope_batch//chr", chr, sep = ''),
                   seg_table = input_table[input_table$chr == chr,])
-  plot_alleloscope(chrom = paste("chr", chr, ""),
+  plot_alleloscope(chrom = paste("chr", chr, sep = ""),
                    seg_table = input_table[input_table$chr == chr,])
   print("plotting concluded successfully")
   #file.rename(from = paste("//work//project//ladcol_014//thesis_cnvcalling//output//Alleloscope_batch//chr", 
