@@ -31,14 +31,15 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
     stop("Segmentation table not selected")
   } else if (!is.data.frame(seg_table)){
     stop("seg_table must be a data frame")
-  } else if (colnames(seg_table) != c("chr", "start", "end", "length")){
-    if (all(c("chr", "start", "end", "length")) %in% colnames(seg_table)){
+  } else if (all(c("chr", "start", "end", "length") %in% colnames(seg_table))){ 
+    if (ncol(seg_table) > 4){
       seg_table <- seg_table[, c("chr", "start", "end", "length")]
       warning("More columns found than required, extra columns were removed")
-    } else {
+    } 
+  } else {
       stop('seg_table must have columns "chr", "start", "end" and "length')
     }
-  }
+  
   
   #read Alleloscope output files
   files_to_read <- list.files(path = paste("chr", chrom, "\\rds\\EMresults", sep = ""), 
@@ -47,9 +48,6 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   all_frags <- lapply(files_to_read,function(x) {
     readRDS(file = x)
   })
-  
-  #read the segmentation table (for CNV labels)
-  seg_table <- seg_table
   
   #add seq names to the Alleloscope output objects
   names <- sapply(files_to_read, basename)
