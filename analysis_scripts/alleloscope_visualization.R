@@ -82,19 +82,20 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   
   #merge Alleloscope output with the segmentation table to obtain EpiAneufinder-predicted cnv states (as well as more complete size metrics)
   frag_summary <- merge(frag_summary, seg_table)
+  print(nrow(frag_summary))
   frag_summary <- frag_summary[order(frag_summary$chr, frag_summary$start),]
   
   #visualize the distribution of mean theta hat values
-  dir.create(out_dir)
-  ggplot(frag_summary, aes(x = theta_hat_avg, y = length, fill = cnv, color = cnv)) +
-    geom_col(alpha = 0.5) +
-    theme_classic()
-  ggsave(paste(out_dir, "/mean_theta.pdf", sep = ""))
+  # dir.create(out_dir)
+  # ggplot(frag_summary, aes(x = theta_hat_avg, y = length, fill = cnv, color = cnv)) +
+  #   geom_col(alpha = 0.5) +
+  #   theme_classic()
+  # ggsave(paste(out_dir, "/mean_theta.pdf", sep = ""))
   
-  ggplot(frag_summary, aes(x = theta_hat_avg, fill = cnv, color = cnv)) +
-    geom_histogram(bins = length(unique(frag_summary$theta_hat_avg)), alpha = 0.5) +
-    theme_classic()
-  ggsave(paste(out_dir, "/mean_theta_hist.pdf", sep = ""))
+  # ggplot(frag_summary, aes(x = theta_hat_avg, fill = cnv, color = cnv)) +
+  #   geom_histogram(bins = length(unique(frag_summary$theta_hat_avg)), alpha = 0.5) +
+  #   theme_classic()
+  # ggsave(paste(out_dir, "/mean_theta_hist.pdf", sep = ""))
   
   #select a region for per cell analysis
   #region <- "chr14_93700001"
