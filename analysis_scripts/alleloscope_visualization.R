@@ -65,8 +65,9 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   start <- c()
   
   print("debug 2")
-  
+  print(length(split_names))
   for (i in 1:length(split_names)){
+    print(i)
     chr <- append(chr, split_names[[i]][1])
     start <- append(start, split_names[[i]][2])
   }
