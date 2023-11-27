@@ -20,7 +20,7 @@
 plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/output/Alleloscope_batch/",
                              chrom = NULL,
                              seg_table = NULL,
-                             out_dir = paste(chrom, "//summary_plots", sep = "")){
+                             out_dir = paste(chrom, "/summary_plots", sep = "")){
   #load libraries
   library(ggplot2)
   
@@ -40,11 +40,9 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   } else {
       stop('seg_table must have columns "chr", "start", "end" and "length')
     }
-  print("debug 1")
-  print(paste(chrom, "\\rds\\EMresults", sep = ""))
   
   #read Alleloscope output files
-  files_to_read <- list.files(path = paste(chrom, "\\rds\\EMresults", sep = ""), 
+  files_to_read <- list.files(path = paste(chrom, "/rds/EMresults", sep = ""), 
                               pattern = "\\.rds$", full.names = T)
   all_frags <- list()
   all_frags <- lapply(files_to_read,function(x) {
@@ -61,23 +59,15 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
   colnames(frag_summary) <- c("chr", "start", "theta_hat_avg")
   
   #split names and starting positions
-  print(length(names))
-  print(length(all_frags))
-  print(files_to_read)
-  
   split_names <- strsplit(names(all_frags), "_")
   chr <- c()
   start <- c()
   
-  print("debug 2")
-  print(length(split_names))
   for (i in 1:length(split_names)){
     print(i)
     chr <- append(chr, split_names[[i]][1])
     start <- append(start, split_names[[i]][2])
   }
-  
-  print("debug 3")
   
   #remove "chr" from chromosome identifiers
   chr <- gsub("chr", "", chr)
@@ -90,25 +80,21 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
     frag_summary$theta_hat_avg[frag] <- mean(mean(unlist(all_frags[[frag]]["theta_hat"])))  
   }
   
-  print("debug 4")
-  
   #merge Alleloscope output with the segmentation table to obtain EpiAneufinder-predicted cnv states (as well as more complete size metrics)
   frag_summary <- merge(frag_summary, seg_table)
   frag_summary <- frag_summary[order(frag_summary$chr, frag_summary$start),]
-  
-  print("debug 5")
   
   #visualize the distribution of mean theta hat values
   dir.create(out_dir)
   ggplot(frag_summary, aes(x = theta_hat_avg, y = length, fill = cnv, color = cnv)) +
     geom_col(alpha = 0.5) +
     theme_classic()
-  ggsave(paste(out_dir, "//mean_theta.pdf", sep = ""))
+  ggsave(paste(out_dir, "/mean_theta.pdf", sep = ""))
   
   ggplot(frag_summary, aes(x = theta_hat_avg, fill = cnv, color = cnv)) +
     geom_histogram(bins = length(unique(frag_summary$theta_hat_avg)), alpha = 0.5) +
     theme_classic()
-  ggsave(paste(out_dir, "//mean_theta_hist.pdf", sep = ""))
+  ggsave(paste(out_dir, "/mean_theta_hist.pdf", sep = ""))
   
   #select a region for per cell analysis
   #region <- "chr14_93700001"
@@ -118,6 +104,6 @@ plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/ou
     ggplot(foo, aes(x = reg_theta, fill = region))+
       geom_histogram(bins = 50, alpha = 0.5)+
       theme_classic()
-    ggsave(paste(out_dir, "//", region, ".pdf", sep = ""))
+    ggsave(paste(out_dir, "/", region, ".pdf", sep = ""))
   }
 }
