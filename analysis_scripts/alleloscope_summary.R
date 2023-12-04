@@ -43,6 +43,7 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
     }
   
   #read Alleloscope output files
+  print("test_1")
   files_to_read <- list.files(path = paste(chrom, "/rds/EMresults", sep = ""), 
                               pattern = "\\.rds$", full.names = T)
   all_frags <- list()
