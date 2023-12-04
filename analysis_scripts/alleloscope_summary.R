@@ -49,7 +49,9 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   all_frags <- lapply(files_to_read,function(x) {
     readRDS(file = x)
   })
-  print("test_1")
+  if (length(all_frags) == 0){
+    stop(paste(chrom, "didn't have any fragments, skipping."))
+  }
   
   #add seq names to the Alleloscope output objects
   names <- sapply(files_to_read, basename)
