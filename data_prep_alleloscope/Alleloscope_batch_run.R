@@ -15,9 +15,9 @@ for (chr in c(1:22)){
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
                                    "Alleloscope_batch//chr", chr, sep = ''),
                   seg_table = input_table[input_table$chr == chr,])
-  plot_alleloscope(chrom = paste("chr", chr, sep = ""),
+  summarize_alleloscope(chrom = paste("chr", chr, sep = ""),
                    seg_table = input_table[input_table$chr == chr,])
-  print("plotting concluded successfully")
+  print("summary files saved successfully")
   #file.rename(from = paste("//work//project//ladcol_014//thesis_cnvcalling//output//Alleloscope_batch//chr", 
   #                          chr, "//rds//theta_N_seg.rds", sep = ''), 
   #             to = paste("//work//project//ladcol_014//thesis_cnvcalling//output//Alleloscope_batch//chr", 
