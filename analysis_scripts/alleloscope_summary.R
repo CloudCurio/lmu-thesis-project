@@ -62,7 +62,9 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   print("test_2")
   
   #split names and starting positions
+  print(length(names(all_frags)))
   split_names <- strsplit(names(all_frags), "_")
+  print(split_names)
   chr <- c()
   start <- c()
   
