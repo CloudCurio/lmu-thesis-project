@@ -2,7 +2,7 @@ setwd("//work//project//ladcol_014//thesis_cnvcalling//lmu-thesis-project")
 #setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data")
 
 source("data_prep_alleloscope//Alleloscope_fun.R")
-source("analysis_scripts//alleloscope_visualization.R")
+source("analysis_scripts//alleloscope_summary.R")
 
 seg_table_path <- "..//data//SNU601_scATACseq//seg_tables//seg_table_500k_epiAneuFinder_SNU601.rds"
 #seg_table_path <- "seg_table_500k_epiAneuFinder_SNU601.rds"
