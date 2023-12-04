@@ -49,6 +49,7 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   all_frags <- lapply(files_to_read,function(x) {
     readRDS(file = x)
   })
+  print("test_1")
   
   #add seq names to the Alleloscope output objects
   names <- sapply(files_to_read, basename)
@@ -58,6 +59,7 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   #create a dataframe for the reformated outputs
   frag_summary <- as.data.frame(matrix(nrow = length(all_frags), ncol = 3))
   colnames(frag_summary) <- c("chr", "start", "theta_hat_avg")
+  print("test_2")
   
   #split names and starting positions
   split_names <- strsplit(names(all_frags), "_")
@@ -69,6 +71,7 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
     chr <- append(chr, split_names[[i]][1])
     start <- append(start, split_names[[i]][2])
   }
+  print("test_3")
   
   #remove "chr" from chromosome identifiers
   chr <- gsub("chr", "", chr)
@@ -80,11 +83,13 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   for (frag in 1:length(all_frags)){
     frag_summary$theta_hat_avg[frag] <- mean(mean(unlist(all_frags[[frag]]["theta_hat"])))  
   }
+  print("test_4")
   
   #merge Alleloscope output with the segmentation table to obtain EpiAneufinder-predicted cnv states (as well as more complete size metrics)
   frag_summary <- merge(frag_summary, seg_table)
   print(nrow(frag_summary))
   frag_summary <- frag_summary[order(frag_summary$chr, frag_summary$start),]
+  print("test_5")
   
   #save the summary files for further analysis
   write.csv(frag_summary, paste(out_dir, "/", chrom, "fragment_summary.csv", sep = ""))
@@ -103,12 +108,12 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   
   #select a region for per cell analysis
   #region <- "chr14_93700001"
-  for (region in names(all_frags)){
-    reg_theta <- unlist(all_frags[[region]]['theta_hat'])
-    foo <- data.frame("region" = region, "theta" = reg_theta)
-    ggplot(foo, aes(x = reg_theta, fill = region))+
-      geom_histogram(bins = 50, alpha = 0.5)+
-      theme_classic()
-    ggsave(paste(out_dir, "/", region, ".pdf", sep = ""))
-  }
-}
+#   for (region in names(all_frags)){
+#     reg_theta <- unlist(all_frags[[region]]['theta_hat'])
+#     foo <- data.frame("region" = region, "theta" = reg_theta)
+#     ggplot(foo, aes(x = reg_theta, fill = region))+
+#       geom_histogram(bins = 50, alpha = 0.5)+
+#       theme_classic()
+#     ggsave(paste(out_dir, "/", region, ".pdf", sep = ""))
+#   }
+ }
