@@ -44,7 +44,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   ################################################################################
   #Load the input files
   ################################################################################
-  
+  print("start input file loading")
   size=read.table(chr_size_path, stringsAsFactors = F) # read size file
   size=size[1:22,]
   
@@ -68,7 +68,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   ################################################################################
   #Create an Alleloscope object for analysis
   ################################################################################
-  
+  print("creating alleloscope object")
   Obj=Createobj(alt_all =alt_all, ref_all = ref_all, var_all = var_all,
                 samplename='Sample', 
                 genome_assembly="GRCh38", 
@@ -86,7 +86,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   ################################################################################
   #Unbiased segmentation based on matched WES/WGS data
   ################################################################################
-
+  print("starting segmentation")
   Obj_filtered$seg_table<-seg_table
   
   Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=100, len = 100000)
@@ -94,7 +94,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   ################################################################################
   #Estimate cell major haplotype proportion for each region
   ################################################################################
-  
+  print("estimating regions")
   #estimates theta_hat for each cell of each region in seg_table_filtered
   Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
   
