@@ -89,7 +89,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   print("starting segmentation")
   Obj_filtered$seg_table<-seg_table
   
-  Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=100, len = 100000)
+  Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500, len = 100000)
   
   ################################################################################
   #Estimate cell major haplotype proportion for each region
