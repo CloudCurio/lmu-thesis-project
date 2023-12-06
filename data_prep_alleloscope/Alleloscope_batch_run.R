@@ -11,7 +11,7 @@ input_table<-readRDS(seg_table_path)
 input_table<-input_table[,c("chr","start","end","length")]
 
 #for (chr in unique(input_table$chr)){
-for (chr in c(1:22)){
+for (chr in c(1)){
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
                                    "Alleloscope_batch//chr", chr, sep = ''),
                   seg_table = input_table[input_table$chr == chr,])
