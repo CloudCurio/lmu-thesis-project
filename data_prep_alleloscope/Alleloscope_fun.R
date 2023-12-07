@@ -98,7 +98,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   print("estimating regions")
   #estimates theta_hat for each cell of each region in seg_table_filtered
   #Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
-  Obj_filtered=estimate(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
+  Obj_filtered=estimate(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = F,cont = FALSE)
   
   # Recommend max_nSNP <50000
   # Regions without allelic imbalence do not coverge (Reach the max number of iterations.)
