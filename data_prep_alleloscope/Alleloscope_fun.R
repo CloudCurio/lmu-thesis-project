@@ -25,6 +25,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   library(Matrix)
   library(Alleloscope) # load the library
   setwd(wd) # set path to the github folder
+  source(".//data_prep_alleloscope//estimate.R")
   
   dir.create(dir_path) # set up output directory
   
@@ -89,14 +90,15 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   print("starting segmentation")
   Obj_filtered$seg_table<-seg_table
   
-  Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=500, len = 100000)
-  saveRDS(Obj_filtered, "500kb_obj.rds")
+  Obj_filtered=Segments_filter(Obj_filtered=Obj_filtered, nSNP=100, len = 100000)
+  saveRDS(Obj_filtered, "100kb_obj.rds")
   ################################################################################
   #Estimate cell major haplotype proportion for each region
   ################################################################################
   print("estimating regions")
   #estimates theta_hat for each cell of each region in seg_table_filtered
-  Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
+  #Obj_filtered=Est_regions(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
+  Obj_filtered=estimate(Obj_filtered = Obj_filtered, max_nSNP = 30000, plot_stat = T,cont = FALSE)
   
   # Recommend max_nSNP <50000
   # Regions without allelic imbalence do not coverge (Reach the max number of iterations.)
