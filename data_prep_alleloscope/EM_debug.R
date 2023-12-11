@@ -9,7 +9,7 @@
 #' @return A list of estimated indicators (I_hat) for each SNP and estimated major haplotype proportion (theta_hat) for each cell in one region. I_hat is the phasing result indicating whether reference allele is on the major haplotype for each SNP. Theta_hat represents the CNV states for each cell. A cell is considered as a CNV carrier if its theta_hat depart from 0.5.
 #'
 #' @export
-EM=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed = 2020){
+EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed = 2020){
   alt_table=t(alt_table)
   ref_table=t(ref_table)
   
