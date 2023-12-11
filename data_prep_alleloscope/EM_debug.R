@@ -40,12 +40,15 @@ EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed =
   var_alt=colSums(alt_table)
   var_vaf=var_alt/var_tot
   var_vaf[is.na(var_vaf)]=0
+  print(var_vaf[,1:5])
+  print(nrow(var_vaf))
+  print(ncol(var_vaf))
 
 
   #k means clustering to get priors
   message("starting k-means clustering")
   set.seed(seed)
-  print(dim(var_vaf))
+  print(paste("var vaf dims are", dim(var_vaf)))
   km=kmeans(x = var_vaf, centers = 3)
   message("kmeans function done")
   km_label=rep(0.5, mm)
