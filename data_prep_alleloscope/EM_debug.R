@@ -42,8 +42,6 @@ EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed =
   print(length(var_alt))
   var_vaf=var_alt/var_tot
   var_vaf[is.na(var_vaf)]=0
-  
-  print(is.vector(var_vaf))
 
 
   #k means clustering to get priors
