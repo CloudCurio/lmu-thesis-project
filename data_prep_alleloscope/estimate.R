@@ -32,7 +32,6 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
   }
   
   # set values
-  message("eval_1")
   assay=Obj_filtered$assay
   size=Obj_filtered$size
   filtered_seg_table=Obj_filtered$seg_table_filtered
@@ -62,7 +61,6 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
     }
   
   ## look at segments
-  message("eval_2")
   var_list = Obj_filtered$var_all
   
   var_str=paste0(as.character(var_list[,1]),":", as.character(var_list[,2]),"_", as.character(var_list[,4]),"_", as.character(var_list[,5]))
@@ -96,7 +94,7 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
     rds_list=list()
     
     for(chrr in as.character(selseg)){
-      
+      message("eval_1")
       if(cont==FALSE){
         chk="chk"
       }else{
@@ -165,13 +163,13 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
           hist(af_all_sub, 100, main="Histogram of VAF values")
           dev.off()
         }
-        message("eval_3_1")
         if(is.null(phases)){
           #message("EM iterations for each region.")
           result=EM(ref_table = as.matrix(total_all_sub-alt_all_sub), alt_table = as.matrix(alt_all_sub) ,seed=1000, max_iter=max_iter)
           
           result$barcodes=colnames(total_all_sub)
           result$SNPs=paste0('chr', var_list_sub$V1,':', var_list_sub$V2,'_', var_list_sub$V4,'_', var_list_sub$V5)
+          message("eval_3_1_a")
         }else{
           #message("Estimate theta_i using phasing info.")
           result=list()
@@ -197,7 +195,7 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
           ind_table=matrix(rep(ind, nn), nrow = nn, byrow = T)
           
           # maximization step
-          message("eval_4")
+          message("eval_maximization")
           w1=rowSums((ref_table*ind_table)+(alt_table*(1-ind_table)))
           w2=rowSums((ref_table*(1-ind_table))+(alt_table*ind_table))
           
@@ -214,9 +212,11 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
         hist(result$theta_hat,100, xlim=c(0,1), main=paste0("Histogram of theta_hat chr", as.character(chrr)))
         dev.off()
         cat(paste0(chrr," "))
+        message("eval_3_2")
       }else{
         cat(paste0("skip ",chrr, " "))
         rds_list[[paste0("chr",as.character(chrr))]]=readRDS(paste0(rds_path,'/chr',chrr,'.rds'))
+        message("eval_4")
         next
       }
       print("loop end")
