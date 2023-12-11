@@ -45,7 +45,7 @@ EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed =
   #k means clustering to get priors
   message("starting k-means clustering")
   set.seed(seed)
-  message(dim(var_vaf))
+  print(dim(var_vaf))
   km=kmeans(x = var_vaf, centers = 3)
   message("kmeans function done")
   km_label=rep(0.5, mm)
