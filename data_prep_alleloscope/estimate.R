@@ -165,7 +165,7 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
         }
         if(is.null(phases)){
           #message("EM iterations for each region.")
-          result=EM(ref_table = as.matrix(total_all_sub-alt_all_sub), alt_table = as.matrix(alt_all_sub) ,seed=1000, max_iter=max_iter)
+          result=EM_debug(ref_table = as.matrix(total_all_sub-alt_all_sub), alt_table = as.matrix(alt_all_sub) ,seed=1000, max_iter=max_iter)
           message("eval_3_1_EM_done")
           
           result$barcodes=colnames(total_all_sub)

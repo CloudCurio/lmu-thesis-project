@@ -26,6 +26,7 @@ alleloscope_run <- function(wd = "//work//project//ladcol_014//thesis_cnvcalling
   library(Alleloscope) # load the library
   setwd(wd) # set path to the github folder
   source(".//data_prep_alleloscope//estimate.R")
+  source(".//data_prep_alleloscope//EM_debug.R")
   
   dir.create(dir_path) # set up output directory
   
