@@ -162,6 +162,7 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
           hist(Matrix::rowSums(total_all_sub), main=paste0(samplename," ",assay," chr",as.character(chrr)," coverage (",as.character(dim(total_all_sub)[1])," SNPs across ",  as.character(dim(total_all_sub)[2]), " cells)"), xlab="coverage of individul SNPs", xlim=c(0,100), ylab='frequency', breaks = 1000)
           hist(af_all_sub, 100, main="Histogram of VAF values")
           dev.off()
+          message("eval_3_if_exit")
         }
         if(is.null(phases)){
           #message("EM iterations for each region.")
