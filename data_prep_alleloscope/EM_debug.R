@@ -40,7 +40,7 @@ EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed =
   var_alt=colSums(alt_table)
   var_vaf=var_alt/var_tot
   var_vaf[is.na(var_vaf)]=0
-  print(var_vaf[,1:5])
+  print(var_vaf[1:5,])
   print(nrow(var_vaf))
   print(ncol(var_vaf))
 
