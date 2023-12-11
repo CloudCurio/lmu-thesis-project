@@ -219,6 +219,7 @@ estimate=function(Obj_filtered=NULL,max_nSNP=30000, plot_stat=TRUE, min_cell=5, 
         rds_list[[paste0("chr",as.character(chrr))]]=readRDS(paste0(rds_path,'/chr',chrr,'.rds'))
         next
       }
+      print("loop end")
     }
     cat("\n")
     
