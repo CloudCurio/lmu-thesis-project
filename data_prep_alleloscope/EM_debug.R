@@ -35,6 +35,7 @@ EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed =
   print(nn)
 
 
+  message("colSums calculated")
   var_tot=colSums(alt_table+ref_table)
   var_alt=colSums(alt_table)
   var_vaf=var_alt/var_tot
@@ -42,6 +43,7 @@ EM_debug=function(ref_table, alt_table, max_iter=max_iter,sub_cells=NULL, seed =
 
 
   #k means clustering to get priors
+  message("starting k-means clustering")
   set.seed(seed)
   km=kmeans(x = var_vaf, centers = 3)
   km_label=rep(0.5, mm)
