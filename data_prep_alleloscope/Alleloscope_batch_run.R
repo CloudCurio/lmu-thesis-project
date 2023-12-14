@@ -17,7 +17,7 @@ for (chr in c(1:22)){
                                    "Alleloscope_batch//chr", chr, sep = ''),
                   seg_table = input_table[input_table$chr == chr,])
   summarize_alleloscope(chrom = paste("chr", chr, sep = ""),
-                   seg_table = input_table[input_table$chr == chr,])
+                        seg_table = input_table[input_table$chr == as.character(chr),])
   print("summary files saved successfully")
   #file.rename(from = paste("//work//project//ladcol_014//thesis_cnvcalling//output//Alleloscope_batch//chr", 
   #                          chr, "//rds//theta_N_seg.rds", sep = ''), 
