@@ -17,16 +17,15 @@
 
 #wd value for my pc: "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data"
 
-summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/output/Alleloscope_batch/",
+plot_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalling/output/Alleloscope_batch/",
                              chrom = NULL,
                              seg_table = NULL,
-                             out_dir = paste(chrom, "/summary_files", sep = "")){
+                             out_dir = paste(chrom, "/summary_plots", sep = "")){
   #load libraries
   library(ggplot2)
   
   #set the working environment
   setwd(wd)
-  dir.create(out_dir)
   
   #check the seg_table parameter for correctness
   if(is.null(seg_table)){
@@ -49,9 +48,6 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   all_frags <- lapply(files_to_read,function(x) {
     readRDS(file = x)
   })
-  if (length(all_frags) == 0){ #exit the function if no fragments are present
-    return(NULL)
-  }
   
   #add seq names to the Alleloscope output objects
   names <- sapply(files_to_read, basename)
@@ -63,9 +59,7 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   colnames(frag_summary) <- c("chr", "start", "theta_hat_avg")
   
   #split names and starting positions
-  print(length(names(all_frags)))
   split_names <- strsplit(names(all_frags), "_")
-  print(split_names)
   chr <- c()
   start <- c()
   
@@ -91,9 +85,6 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   print(nrow(frag_summary))
   frag_summary <- frag_summary[order(frag_summary$chr, frag_summary$start),]
   
-  #save the summary files for further analysis
-  write.csv(frag_summary, paste(out_dir, "/", chrom, "fragment_summary.csv", sep = ""))
-  saveRDS(all_frags, paste(out_dir, "/", chrom, "all_frags.rds", sep = ""))
   #visualize the distribution of mean theta hat values
   # dir.create(out_dir)
   # ggplot(frag_summary, aes(x = theta_hat_avg, y = length, fill = cnv, color = cnv)) +
@@ -108,12 +99,12 @@ summarize_alleloscope <- function(wd = "/work/project/ladcol_014/thesis_cnvcalli
   
   #select a region for per cell analysis
   #region <- "chr14_93700001"
-#   for (region in names(all_frags)){
-#     reg_theta <- unlist(all_frags[[region]]['theta_hat'])
-#     foo <- data.frame("region" = region, "theta" = reg_theta)
-#     ggplot(foo, aes(x = reg_theta, fill = region))+
-#       geom_histogram(bins = 50, alpha = 0.5)+
-#       theme_classic()
-#     ggsave(paste(out_dir, "/", region, ".pdf", sep = ""))
-#   }
- }
+  for (region in names(all_frags)){
+    reg_theta <- unlist(all_frags[[region]]['theta_hat'])
+    foo <- data.frame("region" = region, "theta" = reg_theta)
+    ggplot(foo, aes(x = reg_theta, fill = region))+
+      geom_histogram(bins = 50, alpha = 0.5)+
+      theme_classic()
+    ggsave(paste(out_dir, "/", region, ".pdf", sep = ""))
+  }
+}
