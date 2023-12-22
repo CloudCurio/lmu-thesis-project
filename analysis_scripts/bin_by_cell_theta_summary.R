@@ -1,6 +1,9 @@
 #create a list to contain sub-dataframes
 output_list <- list()
 
+#create a dataframe for SNP counts per region
+SNP_counts <- data.frame("region" = character(0), "nSNP" = numeric(0))
+
 #create a dataframe of region by cell theta hat values
 for (chr in c(1:22)){
   #read the summary RDS file
@@ -31,6 +34,9 @@ for (chr in c(1:22)){
     theta_slice <- summary[[segment]]$theta_hat
     theta_slice <- as.data.frame(t(theta_slice))
     theta_summary <- merge(theta_summary, theta_slice, all.x = T, all.y = T, sort = F)
+    
+    #get SNP numbers per region
+    SNP_counts <- rbind(SNP_counts, c(segment, length(summary[[segment]]$SNPs)))
   }
   rownames(theta_summary) <- names(summary)
   
@@ -63,3 +69,4 @@ for (chr_df in output_list){
 rownames(output_df) <- total_segments
 
 write.csv(output_df, file = "bin_by_cell_theta.csv")
+write.csv(SNP_counts, file = "SNP_counts.csv")
