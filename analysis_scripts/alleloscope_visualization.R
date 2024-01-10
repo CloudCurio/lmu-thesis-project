@@ -1,6 +1,7 @@
 #loading libraries
 library(ggplot2)
 library(dplyr)
+library(Seurat)
 
 #set the working directory
 setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_batch_run")
@@ -8,8 +9,21 @@ setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Da
 #load input files
 theta_values <- read.csv("bin_by_cell_theta.csv")
 colnames(theta_values)[which(colnames(theta_values) == "X")] <- "region"
+
 seg_table <- readRDS("..//seg_table_500k_epiAneuFinder_SNU601.rds")
 SNP_counts <- read.csv("SNP_counts.csv")
+count_matrix <- readRDS("..//epiAneufinder runs//500kb bins//counts_gc_corrected.rds")
+colnames(count_matrix) <- sub("^cell-", "", colnames(count_matrix))
+
+count_summary <- readRDS("..//epiAneufinder runs//500kb bins//count_summary.rds")
+rowinfo <- rowRanges(count_summary)
+
+wgs_cnv_class <- read.csv("..\\wgs_results_formated.csv")
+wgs_cnv_class$X <- NULL
+wgs_cnv_class$region <- apply(wgs_cnv_class, 1, function(row) {
+  paste("chr", row['chr'], ":", row['start'], sep = "")
+})
+wgs_cnv_class$wgs_score <-  1*wgs_cnv_class$loss_wgs+2*wgs_cnv_class$base_wgs+3*wgs_cnv_class$gain_wgs
 
 SNP_counts <- SNP_counts[,-1]
 colnames(SNP_counts) <- c("region", "nSNP")
@@ -51,7 +65,21 @@ ggplot(plot_data, aes(x = val)) +
 
 #save a subset of cells with at least 50% of the regions
 good_cells <- theta_values[, which(na_proportion <= 0.5)]
+good_cells$cnv <- theta_values$cnv
 write.csv(good_cells, "high_content_cells.csv")
+
+#subset the count matrix by selected cells
+#introduce rownames from the summary GRanges
+for (fragment in 1:nrow(seg_table)){
+  rownames(count_matrix)[fragment] <- paste(rowinfo$wSeq[fragment], rowinfo$wStart[fragment], sep = ":")
+}
+colnames(good_cells) <- sub("\\.", "-", colnames(good_cells))
+#leave only the previously selected cells (also keep only the regions present in Alleloscope results)
+good_counts <- subset(count_matrix,
+                      select = colnames(count_matrix) %in% colnames(good_cells),
+                      rownames(count_matrix) %in% rownames(good_cells))
+rownames(good_counts) <- rownames(count_matrix)[rownames(count_matrix) %in% rownames(good_cells)]
+write.csv(good_counts, file = "read_counts_filtered.csv")
 
 #plot mean values per region, colored by CNV type
 plot_data <- data.frame("val" = rowMeans(theta_values[, !names(theta_values) %in% "cnv"], na.rm = T), "cnv" = theta_values$cnv)
@@ -64,6 +92,15 @@ ggplot(plot_data, aes(x = val, fill = cnv)) +
     y = "Frequency"
   ) +
   theme_minimal()
+
+#TODO:plot reads per region
+
+#create a file with CNV label comparison (WGS and epiAneufinder predictions)
+cnv_data <- merge(cnv_data, wgs_cnv_class, by.x = "region", sort = F)
+cnv_data <- cnv_data[which(cnv_data$region %in% rownames(good_cells)),colnames(cnv_data) %in% c("region", "cnv", "wgs_score")]
+cnv_data$cnv <- factor(cnv_data$cnv, levels = c("loss", "base", "gain"))
+cnv_data$cnv <- as.integer(cnv_data$cnv)
+write.csv(cnv_data, file = "cnv_labels_comparison.csv")
 
 #plot SNP counts per region
 #extract chromosome number and starting position
