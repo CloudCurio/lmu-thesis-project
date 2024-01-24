@@ -4,7 +4,7 @@ library(dplyr)
 library(Seurat)
 
 #set the working directory
-setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_batch_run")
+setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_batch_fixed")
 
 #load input files
 theta_values <- read.csv("bin_by_cell_theta.csv")
@@ -28,17 +28,26 @@ wgs_cnv_class$wgs_score <-  1*wgs_cnv_class$loss_wgs+2*wgs_cnv_class$base_wgs+3*
 SNP_counts <- SNP_counts[,-1]
 colnames(SNP_counts) <- c("region", "nSNP")
 
+#reform the per-cell CNV calls
+per_cell_CNVs <- as.data.frame(readRDS("..//epiAneufinder runs//500kb bins//cnv_calls.rds"))
+colnames(per_cell_CNVs) <- sub("^cell.", "", colnames(per_cell_CNVs))
+colnames(per_cell_CNVs) <- gsub("\\.", "-", colnames(per_cell_CNVs))
+per_cell_CNVs <- per_cell_CNVs+1
+
 #obtain cnv values from the segmentation table
 seg_table$region <- NA
 for (i in 1:nrow(seg_table)){
   seg_table$region[i] <- paste("chr", seg_table$chr[i],":", seg_table$start[i], sep = "")
 }
+rownames(per_cell_CNVs) <- seg_table$region
+write.csv(per_cell_CNVs, "..//epiAneufinder runs//500kb bins//epiAneufinder_per_cell_cnv.csv")
 
-#add cnv class information to the theta_values
+#add Alleloscope cnv class information to the theta_values
 cnv_data <- data.frame(region = seg_table$region, cnv = seg_table$cnv)
 theta_values <- merge(theta_values, cnv_data, all.x = T, by = "region", sort = F)
 rownames(theta_values) <- theta_values$region
 theta_values <- theta_values[, !names(theta_values) %in% "region"]
+write.csv(theta_values, "HMM_theta_full.csv")
 
 #add cnv class information to the SNP_counts
 SNP_counts <- merge(SNP_counts, cnv_data, all.x = T, by = "region", sort = F)
@@ -51,10 +60,12 @@ for (i in colnames(theta_values)){
   }
   na_proportion <- append(na_proportion, sum(is.na(theta_values[,i]))/length(theta_values[,i]))
 }
+
 names(na_proportion) <- colnames(theta_values)[-ncol(theta_values)]
+print(summary(na_proportion))
 plot_data <- data.frame("val" = as.numeric(na_proportion))
 
-ggplot(plot_data, aes(x = val)) +
+p <- ggplot(plot_data, aes(x = val)) +
   geom_histogram(binwidth = 0.02, fill = "#008080", color = "black") +
   labs(
     title = "NA proportion per cell",
@@ -62,29 +73,34 @@ ggplot(plot_data, aes(x = val)) +
     y = "Frequency"
   ) +
   theme_minimal()
+ggsave("NA_proportion.pdf", p)
 
 #save a subset of cells with at least 50% of the regions
 good_cells <- theta_values[, which(na_proportion <= 0.5)]
 good_cells$cnv <- theta_values$cnv
-write.csv(good_cells, "high_content_cells.csv")
+colnames(good_cells) <- sub("\\.", "-", colnames(good_cells))
+write.csv(good_cells, "HMM_theta_high_content.csv")
 
 #subset the count matrix by selected cells
 #introduce rownames from the summary GRanges
 for (fragment in 1:nrow(seg_table)){
   rownames(count_matrix)[fragment] <- paste(rowinfo$wSeq[fragment], rowinfo$wStart[fragment], sep = ":")
 }
-colnames(good_cells) <- sub("\\.", "-", colnames(good_cells))
-#leave only the previously selected cells (also keep only the regions present in Alleloscope results)
-good_counts <- subset(count_matrix,
-                      select = colnames(count_matrix) %in% colnames(good_cells),
-                      rownames(count_matrix) %in% rownames(good_cells))
+
+#keep only the regions present in Alleloscope results
+good_counts <- as.data.frame(count_matrix[rownames(count_matrix) %in% rownames(good_cells),])
 rownames(good_counts) <- rownames(count_matrix)[rownames(count_matrix) %in% rownames(good_cells)]
-write.csv(good_counts, file = "read_counts_filtered.csv")
+write.csv(good_counts, "HMM_read_counts_full.csv")
+
+#leave only the previously selected cells
+good_counts <- good_counts[, colnames(good_counts) %in% colnames(good_cells)]
+foo <- good_counts[, which(colnames(good_counts) %in% colnames(good_cells)), drop = FALSE]
+write.csv(good_counts, file = "HMM_read_counts_filtered.csv")
 
 #plot mean values per region, colored by CNV type
 plot_data <- data.frame("val" = rowMeans(theta_values[, !names(theta_values) %in% "cnv"], na.rm = T), "cnv" = theta_values$cnv)
 
-ggplot(plot_data, aes(x = val, fill = cnv)) +
+p <- ggplot(plot_data, aes(x = val, fill = cnv)) +
   geom_histogram(binwidth = 0.01, color = "black", position = "dodge") +
   labs(
     title = "Mean theta-hat values",
@@ -92,6 +108,7 @@ ggplot(plot_data, aes(x = val, fill = cnv)) +
     y = "Frequency"
   ) +
   theme_minimal()
+ggsave("mean_theta_per_region.pdf", p)
 
 #TODO:plot reads per region
 
