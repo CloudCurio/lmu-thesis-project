@@ -17,7 +17,7 @@ input_table <- input_table[,c("chr","start","end","length")]
 for (chr in c(1:22)){
   message(paste("chromosome:", chr))
   alleloscope_run(dir_path = paste("//work//project//ladcol_014//thesis_cnvcalling//output//",
-                                   "Alleloscope_batch//chr", chr, sep = ''),
+                                   "Alleloscope_1mb_bins//chr", chr, sep = ''),
                   seg_table = input_table[input_table$chr == chr,])
   summarize_alleloscope(chrom = paste("chr", chr, sep = ""),
                         seg_table = input_table[input_table$chr == as.character(chr),])
