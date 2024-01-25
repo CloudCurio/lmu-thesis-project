@@ -19,7 +19,7 @@ generate_seg_table <- function(epiA_results_path = "epiAneufinder runs//500kb bi
   
   #maintenance changes, such as renaming columns and adding length
   colnames(results_table)[1] <- "chr"
-  results_table$chr <- as.integer(gsub("chr", "", results_table$chr))
+  results_table$chr <- gsub("chr", "", results_table$chr)
   results_table$length <- results_table$end - results_table$start + 1
   
   #change cnv values to character labels
