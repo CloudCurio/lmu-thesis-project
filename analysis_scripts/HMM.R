@@ -17,6 +17,7 @@ library(ggpubr)
 
 #TODO: start substituting paths with variables for further conversion into a function
 stat_flag <- FALSE
+models_to_test <- "filtered" #options: "full", "filtered", c("full", "filtered")
 
 ###############################################################################
 # Load the input data
@@ -204,9 +205,14 @@ set.seed(2024)
 # test_mod <- setpars(test_mod, getpars(f_train))
 
 #create a list for storage of models
-models <- list("filtered" = list(), "full" = list())
-models$filtered[["data"]] <- all_cells_data_filtered
-models$full[["data"]] <- all_cells_data_full
+models <- replicate(length(models_to_test), list(), simplify = FALSE)
+names(models) <- models_to_test
+if ("filtered" %in% models_to_test){
+  models$filtered[["data"]] <- all_cells_data_filtered
+}
+if ("full" %in% models_to_test){
+  models$full[["data"]] <- all_cells_data_full
+}
 
 #train HMM models and calculate performance metrics
 for (model in names(models)){
