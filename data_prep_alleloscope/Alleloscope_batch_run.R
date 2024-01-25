@@ -3,12 +3,15 @@ setwd("//work//project//ladcol_014//thesis_cnvcalling//lmu-thesis-project")
 
 source("data_prep_alleloscope//Alleloscope_fun.R")
 source("analysis_scripts//alleloscope_summary.R")
+source("data_prep_alleloscope//generate_seg_table.R")
 
-seg_table_path <- "..//data//SNU601_scATACseq//seg_tables//seg_table_500k_epiAneuFinder_SNU601.rds"
+#seg_table_path <- "..//data//SNU601_scATACseq//seg_tables//seg_table_500k_epiAneuFinder_SNU601.rds"
 #seg_table_path <- "seg_table_500k_epiAneuFinder_SNU601.rds"
 
-input_table<-readRDS(seg_table_path)
-input_table<-input_table[,c("chr","start","end","length")]
+#input_table<-readRDS(seg_table_path)
+input_table <- generate_seg_table(epiA_results_path = "../output/epiAneufinder_results/epiAneufinder_results//results_table.tsv",
+                                  out_path = "..//data//SNU601_scATACseq//seg_tables//seg_table_1mb_epiAneuFinder_SNU601.rds")
+input_table <- input_table[,c("chr","start","end","length")]
 
 #for (chr in unique(input_table$chr)){
 for (chr in c(1:22)){
