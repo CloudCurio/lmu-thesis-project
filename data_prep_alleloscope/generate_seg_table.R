@@ -21,6 +21,10 @@ generate_seg_table <- function(epiA_results_path = "epiAneufinder runs//500kb bi
   colnames(results_table)[1] <- "chr"
   results_table$length <- results_table$end - results_table$start + 1
   
+  #change cnv values to character labels
+  results_table$cnv <- ifelse(results_table$cnv >= 1.5, "gain", 
+                ifelse(results_table$cnv <= 0.5, "loss", "base"))
+  
   #save the resulting file
   if (!is.na(out_path)){
     saveRDS(results_table, out_path)
