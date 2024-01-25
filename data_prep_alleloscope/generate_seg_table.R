@@ -26,4 +26,5 @@ generate_seg_table <- function(epiA_results_path = "epiAneufinder runs//500kb bi
     saveRDS(results_table, out_path)
   }
   
-} return(results_table)
+  return(results_table)
+} 
