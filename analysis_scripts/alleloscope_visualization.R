@@ -10,7 +10,7 @@ setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Da
 theta_values <- read.csv("bin_by_cell_theta.csv")
 colnames(theta_values)[which(colnames(theta_values) == "X")] <- "region"
 
-seg_table <- readRDS("..//..//seg_table_500k_epiAneuFinder_SNU601.rds")
+seg_table <- readRDS("..//..//seg_tables//seg_table_500k_epiAneuFinder_SNU601.rds")
 SNP_counts <- read.csv("SNP_counts.csv")
 count_matrix <- readRDS("..//..//epiAneufinder runs//500kb bins//counts_gc_corrected.rds")
 colnames(count_matrix) <- sub("^cell-", "", colnames(count_matrix))
