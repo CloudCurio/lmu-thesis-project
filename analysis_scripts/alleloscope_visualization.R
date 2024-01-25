@@ -4,21 +4,21 @@ library(dplyr)
 library(Seurat)
 
 #set the working directory
-setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_batch_fixed")
+setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_runs\\Alleloscope_batch_fixed")
 
 #load input files
 theta_values <- read.csv("bin_by_cell_theta.csv")
 colnames(theta_values)[which(colnames(theta_values) == "X")] <- "region"
 
-seg_table <- readRDS("..//seg_table_500k_epiAneuFinder_SNU601.rds")
+seg_table <- readRDS("..//..//seg_table_500k_epiAneuFinder_SNU601.rds")
 SNP_counts <- read.csv("SNP_counts.csv")
-count_matrix <- readRDS("..//epiAneufinder runs//500kb bins//counts_gc_corrected.rds")
+count_matrix <- readRDS("..//..//epiAneufinder runs//500kb bins//counts_gc_corrected.rds")
 colnames(count_matrix) <- sub("^cell-", "", colnames(count_matrix))
 
-count_summary <- readRDS("..//epiAneufinder runs//500kb bins//count_summary.rds")
+count_summary <- readRDS("..//..//epiAneufinder runs//500kb bins//count_summary.rds")
 rowinfo <- rowRanges(count_summary)
 
-wgs_cnv_class <- read.csv("..\\wgs_results_formated.csv")
+wgs_cnv_class <- read.csv("..//..//wgs_results_formated.csv")
 wgs_cnv_class$X <- NULL
 wgs_cnv_class$region <- apply(wgs_cnv_class, 1, function(row) {
   paste("chr", row['chr'], ":", row['start'], sep = "")
@@ -29,7 +29,7 @@ SNP_counts <- SNP_counts[,-1]
 colnames(SNP_counts) <- c("region", "nSNP")
 
 #reform the per-cell CNV calls
-per_cell_CNVs <- as.data.frame(readRDS("..//epiAneufinder runs//500kb bins//cnv_calls.rds"))
+per_cell_CNVs <- as.data.frame(readRDS("..//..//epiAneufinder runs//500kb bins//cnv_calls.rds"))
 colnames(per_cell_CNVs) <- sub("^cell.", "", colnames(per_cell_CNVs))
 colnames(per_cell_CNVs) <- gsub("\\.", "-", colnames(per_cell_CNVs))
 per_cell_CNVs <- per_cell_CNVs+1
@@ -40,7 +40,7 @@ for (i in 1:nrow(seg_table)){
   seg_table$region[i] <- paste("chr", seg_table$chr[i],":", seg_table$start[i], sep = "")
 }
 rownames(per_cell_CNVs) <- seg_table$region
-write.csv(per_cell_CNVs, "..//epiAneufinder runs//500kb bins//epiAneufinder_per_cell_cnv.csv")
+write.csv(per_cell_CNVs, "..//..//epiAneufinder runs//500kb bins//epiAneufinder_per_cell_cnv.csv")
 
 #add Alleloscope cnv class information to the theta_values
 cnv_data <- data.frame(region = seg_table$region, cnv = seg_table$cnv)

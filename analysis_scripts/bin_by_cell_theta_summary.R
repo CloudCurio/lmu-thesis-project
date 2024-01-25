@@ -1,5 +1,5 @@
 #set the working directory
-setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_batch_fixed")
+setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_runs\\Alleloscope_batch_fixed")
 
 #create a list to contain sub-dataframes
 output_list <- list()
