@@ -548,60 +548,64 @@ dev.off()
 
 #plot CNV predictions
 #extract chromosome number and starting position
-HMM_preds$chr <- gsub("chr([0-9]+):.*", "chr\\1", HMM_preds$region)
-HMM_preds$fragment <- as.numeric(gsub("chr[0-9]+:([0-9]+)", "\\1", HMM_preds$region))
+for (model in names(models)){
+  HMM_preds <- models[[model]][["predictions"]]
+  HMM_preds$chr <- gsub("chr([0-9]+):.*", "chr\\1", HMM_preds$region)
+  HMM_preds$fragment <- as.numeric(gsub("chr[0-9]+:([0-9]+)", "\\1", HMM_preds$region))
+  
+  #make chr column a factor
+  HMM_preds$chr <- factor(HMM_preds$chr, levels = paste0("chr", 1:22))
+  
+  #reorder the dataframe
+  HMM_preds <- HMM_preds[order(HMM_preds$chr, HMM_preds$fragment), ]
+  
+  #add row number and record positions for labels
+  HMM_preds <- HMM_preds %>%
+    mutate(X_pos = as.numeric(factor(region, levels = unique(region))))
+  
+  chromosome_label_positions <- HMM_preds %>%
+    filter(!duplicated(chr)) %>%
+    pull(X_pos)
+  
+  #create a plot for the predictions
+  p <- ggplot(HMM_preds, aes(x = X_pos, y = cell, fill = factor(HMM_pred))) +
+    geom_tile() +
+    geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
+    labs(title = paste("CNV predictions by the", model, "HMM"),
+         x = "Region",
+         y = "Cell",
+         fill = "CNV class") +
+    scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
+                       expand = c(0.05, 0)) +
+    scale_fill_manual(values = c("#1fb424", "#b4421f"),
+                      labels = c("base", "gain")) +
+    theme_minimal() +
+    theme(legend.position = "top", 
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.text.y = element_blank()) 
+  
+  #create a plot for the ground truth
+  p_wgs <- ggplot(HMM_preds, aes(x = X_pos, y = 1, fill = factor(WGS_score))) +
+    geom_tile() +
+    geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
+    labs(title = paste("CNV predictions by the", model, "HMM"),
+         x = "Region",
+         y = "WGS",
+         fill = "CNV class") +
+    scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
+                       expand = c(0.05, 0)) +
+    scale_fill_manual(values = c("#1fb424", "#b4421f"),
+                      labels = c("base", "gain")) +
+    theme_minimal() +
+    theme(legend.position = "top", 
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.text.y = element_blank())
+  
+  #combine the plots
+  combined_plot <- ggarrange(p, p_wgs + labs(title = NULL) + theme(legend.position="none", ), 
+                             ncol = 1, heights = c(88, 12))
+  
+  ggsave(paste(out_dir, model, "_HMM_karyogram.pdf", sep = ""), 
+         plot = combined_plot, width = 40, height = 20, units = "cm")
+}
 
-#make chr column a factor
-HMM_preds$chr <- factor(HMM_preds$chr, levels = paste0("chr", 1:22))
-
-#reorder the dataframe
-HMM_preds <- HMM_preds[order(HMM_preds$chr, HMM_preds$fragment), ]
-
-#add row number and record positions for labels
-HMM_preds <- HMM_preds %>%
-  mutate(X_pos = as.numeric(factor(region, levels = unique(region))))
-
-chromosome_label_positions <- HMM_preds %>%
-  filter(!duplicated(chr)) %>%
-  pull(X_pos)
-
-#create a plot for the predictions
-p <- ggplot(HMM_preds, aes(x = X_pos, y = cell, fill = factor(HMM_pred))) +
-  geom_tile() +
-  geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
-  labs(title = "CNV predictions by the HMM",
-       x = "Region",
-       y = "Cell",
-       fill = "CNV class") +
-  scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
-                     expand = c(0.05, 0)) +
-  scale_fill_manual(values = c("#1fb424", "#b4421f"),
-                    labels = c("base", "gain")) +
-  theme_minimal() +
-  theme(legend.position = "top", 
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.text.y = element_blank()) 
-
-#create a plot for the ground truth
-p_wgs <- ggplot(HMM_preds, aes(x = X_pos, y = 1, fill = factor(WGS_score))) +
-  geom_tile() +
-  geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
-  labs(title = "CNV predictions by the HMM",
-       x = "Region",
-       y = "WGS",
-       fill = "CNV class") +
-  scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
-                     expand = c(0.05, 0)) +
-  scale_fill_manual(values = c("#1fb424", "#b4421f"),
-                    labels = c("base", "gain")) +
-  theme_minimal() +
-  theme(legend.position = "top", 
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.text.y = element_blank())
-
-#combine the plots
-combined_plot <- ggarrange(p, p_wgs + labs(title = NULL) + theme(legend.position="none", ), 
-                           ncol = 1, heights = c(88, 12))
-
-ggsave("..//..//HMM outputs//Alleloscope_old_epiA_batch//HMM_karyogram.pdf", 
-       plot = combined_plot, width = 40, height = 20, units = "cm")
