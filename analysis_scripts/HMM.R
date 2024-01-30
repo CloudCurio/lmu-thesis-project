@@ -577,8 +577,8 @@ for (model in names(models)){
          fill = "CNV class") +
     scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
                        expand = c(0.05, 0)) +
-    scale_fill_manual(values = c("#1fb424", "#b4421f"),
-                      labels = c("base", "gain")) +
+    scale_fill_manual(values = c("#2171B5", "#1fb424", "#b4421f"),
+                      labels = c("loss", "base", "gain")) +
     theme_minimal() +
     theme(legend.position = "top", 
           axis.text.x = element_text(angle = 45, hjust = 1),
@@ -594,8 +594,8 @@ for (model in names(models)){
          fill = "CNV class") +
     scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
                        expand = c(0.05, 0)) +
-    scale_fill_manual(values = c("#1fb424", "#b4421f"),
-                      labels = c("base", "gain")) +
+    scale_fill_manual(values = c("#2171B5", "#1fb424", "#b4421f"),
+                      labels = c("loss", "base", "gain")) +
     theme_minimal() +
     theme(legend.position = "top", 
           axis.text.x = element_text(angle = 45, hjust = 1),
@@ -605,7 +605,7 @@ for (model in names(models)){
   combined_plot <- ggarrange(p, p_wgs + labs(title = NULL) + theme(legend.position="none", ), 
                              ncol = 1, heights = c(88, 12))
   
-  ggsave(paste(out_dir, model, "_HMM_karyogram.pdf", sep = ""), 
+  ggsave(paste(output_dir, model, "_HMM_karyogram.pdf", sep = ""), 
          plot = combined_plot, width = 40, height = 20, units = "cm")
 }
 
