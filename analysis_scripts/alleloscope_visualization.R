@@ -40,7 +40,7 @@ for (i in 1:nrow(seg_table)){
   seg_table$region[i] <- paste("chr", seg_table$chr[i],":", seg_table$start[i], sep = "")
 }
 rownames(per_cell_CNVs) <- seg_table$region
-write.csv(per_cell_CNVs, "..//..//epiAneufinder runs//500kb bins//epiAneufinder_per_cell_cnv.csv")
+write.csv(per_cell_CNVs, "..//..//HMM inputs//epiAneufinder_per_cell_cnv.csv")
 
 #add Alleloscope cnv class information to the theta_values
 cnv_data <- data.frame(region = seg_table$region, cnv = seg_table$cnv)
