@@ -405,7 +405,7 @@ for (model in names(models)){
 #get metric distributions
 #for per_class metrics
 pdf(paste(output_dir, "metrics_distributions_per_class.pdf", sep = ""))
-for (metric in names(metrics_list[["loss"]])){
+for (metric in colnames(per_class_metrics_df)){
   for (model in names(models)){
     for (cnv_class in c("loss", "base", "gain")){
       print(paste(metric, model))
@@ -425,7 +425,7 @@ dev.off()
 
 #for overall metrics
 pdf(paste(output_dir, "metrics_distributions_overall.pdf", sep = ""))
-for (metric in names(metrics_list[["overall"]])){
+for (metric in colnames(overall_metrics_df)){
   for (model in names(models)){
     plot_data <- models[[model]][["metrics"]][["overall"]][, metric]
     
@@ -440,6 +440,53 @@ for (metric in names(metrics_list[["overall"]])){
 }
 dev.off()
 
+#plot model metrics against each other
+#per-class metrics
+pdf(paste(output_dir, "different_HMM_per_class_metrics_comparison.pdf", sep = ""))
+for (metric in colnames(per_class_metrics_df)){
+  for (cnv_type in c("loss", "base", "gain")){  
+    extracted_metrics <- list()
+    for (model in names(models)){
+      extracted_metrics[[model]] <- models[[model]][["metrics"]][[cnv_type]][, metric] 
+    }
+    plot_data <- data.frame(value = c(extracted_metrics[[1]], extracted_metrics[[2]]), 
+                            source_model = rep(names(extracted_metrics),
+                                               each = length(extracted_metrics[[1]])))
+    
+    p <- ggplot(plot_data, aes(value, fill = source_model)) + 
+      geom_histogram(position = "dodge", alpha = 0.5, colour = "black", bins = 15) +
+      scale_fill_brewer(palette = "Set1") +
+      theme_minimal() +
+      labs(title = paste(metric, "distribution for the ", names(extracted_metrics)[1], 
+                         "and", names(extracted_metrics)[2],"HMM models \n",
+                         paste("(", cnv_type, ")", sep = "")), 
+           x = metric, y = "Count")
+    print(p)
+  }
+}
+dev.off()
+
+#overall metrics
+pdf(paste(output_dir, "different_HMM_overall_metrics_comparison.pdf", sep = ""))
+for (metric in colnames(overall_metrics_df)){
+  extracted_metrics <- list()
+  for (model in names(models)){
+    extracted_metrics[[model]] <- models[[model]][["metrics"]][["overall"]][, metric] 
+  }
+  plot_data <- data.frame(value = c(extracted_metrics[[1]], extracted_metrics[[2]]), 
+                          source_model = rep(names(extracted_metrics),
+                                             each = length(extracted_metrics[[1]])))
+  
+  p <- ggplot(plot_data, aes(value, fill = source_model)) + 
+    geom_histogram(position = "dodge", alpha = 0.5, colour = "black", bins = 15) +
+    scale_fill_brewer(palette = "Set1") +
+    theme_minimal() +
+    labs(title = paste(metric, "distribution for the ", names(extracted_metrics)[1], 
+                       "and", names(extracted_metrics)[2],"HMM models"), 
+         x = metric, y = "Count")
+  print(p)
+}
+dev.off()
 ###############################################################################
 # Test epiAneufinder accuracy
 ###############################################################################
@@ -516,11 +563,9 @@ write.csv(epiA_eval, paste(output_dir, "epiAneufinder_per_cell_metrics.csv", sep
 
 
 #plot epiAneufinder per-cell metrics against HMM metrics
-#create a storage list for plots
-
-pdf(paste(output_dir, "epiAneufinder_and_HMM_metrics_comparison.pdf", sep = ""))
-for (cnv_type in c("loss", "base", "gain")){
-  for (model in names(models)){
+for (model in names(models)){
+  pdf(paste(output_dir, model, "_epiAneufinder_and_HMM_metrics_comparison.pdf", sep = ""))
+  for (cnv_type in c("loss", "base", "gain")){
     #subset the data by cnv type and model name
     data_sub <- models[[model]][["metrics"]][[cnv_type]]
     epiA_sub <- epiA_eval[(epiA_eval$cnv_class == cnv_type),]
@@ -540,8 +585,9 @@ for (cnv_type in c("loss", "base", "gain")){
       print(p)
     }
   }
+  dev.off()
 }
-dev.off()
+
 ###############################################################################
 # Plot the results on a karyogram
 ###############################################################################
@@ -609,3 +655,73 @@ for (model in names(models)){
          plot = combined_plot, width = 40, height = 20, units = "cm")
 }
 
+
+#create a caryogram for epiAneufinder results for comparison
+#construct an input table
+epiA_karyo_data <- cnv_labels_per_cell_filtered
+epiA_karyo_data$WGS_score <- epiA_truth
+epiA_karyo_data$region <- rownames(epiA_karyo_data)
+
+#create a long format dataframe
+epiA_karyo_data <- pivot_longer(epiA_karyo_data, cols = -c(region, WGS_score), 
+                                names_to = "cell", values_to = "pred")
+
+#add segment and chromosome columns
+epiA_karyo_data$chr <- gsub("chr([0-9]+):.*", "chr\\1", epiA_karyo_data$region)
+epiA_karyo_data$segment <- as.numeric(gsub("chr[0-9]+:([0-9]+)", "\\1", epiA_karyo_data$region))
+
+#make chr column a factor
+epiA_karyo_data$chr <- factor(epiA_karyo_data$chr, levels = paste0("chr", 1:22))
+
+#reorder the dataframe
+epiA_karyo_data <- epiA_karyo_data[order(epiA_karyo_data$chr, 
+                                         epiA_karyo_data$segment), ]
+
+#add row number and record positions for labels
+epiA_karyo_data <- epiA_karyo_data %>%
+  mutate(X_pos = as.numeric(factor(region, levels = unique(region))))
+
+chromosome_label_positions <- epiA_karyo_data %>%
+  filter(!duplicated(chr)) %>%
+  pull(X_pos)
+
+#create a plot for the predictions
+p <- ggplot(epiA_karyo_data, aes(x = X_pos, y = cell, fill = factor(pred))) +
+  geom_tile() +
+  geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
+  labs(title = paste("CNV predictions by epiAneufinder"),
+       x = "Region",
+       y = "Cell",
+       fill = "CNV class") +
+  scale_x_continuous(breaks = chromosome_label_positions, labels = unique(epiA_karyo_data$chr),
+                     expand = c(0.05, 0)) +
+  scale_fill_manual(values = c("#2171B5", "#1fb424", "#b4421f"),
+                    labels = c("loss", "base", "gain")) +
+  theme_minimal() +
+  theme(legend.position = "top", 
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_blank()) 
+
+#create a plot for the ground truth
+p_wgs <- ggplot(epiA_karyo_data, aes(x = X_pos, y = 1, fill = factor(WGS_score))) +
+  geom_tile() +
+  geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
+  labs(title = paste("CNV predictions by epiAneufinder"),
+       x = "Region",
+       y = "WGS",
+       fill = "CNV class") +
+  scale_x_continuous(breaks = chromosome_label_positions, labels = unique(epiA_karyo_data$chr),
+                     expand = c(0.05, 0)) +
+  scale_fill_manual(values = c("#2171B5", "#1fb424", "#b4421f"),
+                    labels = c("loss", "base", "gain")) +
+  theme_minimal() +
+  theme(legend.position = "top", 
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_blank())
+
+#combine the plots
+combined_plot <- ggarrange(p, p_wgs + labs(title = NULL) + theme(legend.position="none", ), 
+                           ncol = 1, heights = c(88, 12))
+
+ggsave(paste(output_dir, "epiAneufinder_karyogram.pdf", sep = ""), 
+       plot = combined_plot, width = 40, height = 20, units = "cm")
