@@ -6,6 +6,9 @@ library(Seurat)
 #set the working directory
 setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_runs\\Alleloscope_batch_fixed")
 
+#set binsize for correct wgs calculation
+binsize <- 500000
+
 #load input files
 theta_values <- read.csv("bin_by_cell_theta.csv")
 colnames(theta_values)[which(colnames(theta_values) == "X")] <- "region"
@@ -111,6 +114,31 @@ p <- ggplot(plot_data, aes(x = val, fill = cnv)) +
 ggsave("mean_theta_per_region.pdf", p)
 
 #TODO:plot reads per region
+
+#Calculate wgs values for regions from cnv_data
+#create an empty dataframe
+new_wgs_split <- data.frame(matrix(nrow = 0, ncol = ncol(wgs_cnv_class)))
+colnames(new_wgs_split) <- colnames(wgs_cnv_class)
+for (region in 1:nrow(seg_table)){
+  #cut a slice of the wgs data from start to end of the seg_table region
+  wgs_subset <- wgs_cnv_class[which(wgs_cnv_class$chr == seg_table$chr[region]),]
+  wgs_subset <- wgs_subset[which(wgs_subset$start == seg_table$start[region]):
+                                which(wgs_subset$end == seg_table$end[region]),]
+  
+  #prepare a 1-row df for output
+  new_wgs_row <- wgs_subset[1,]
+  new_wgs_row$end <- wgs_subset$end[nrow(wgs_subset)]
+  new_wgs_row$gain_wgs <- mean(wgs_subset$gain_wgs)
+  new_wgs_row$loss_wgs <- mean(wgs_subset$loss_wgs)
+  new_wgs_row$base_wgs <- mean(wgs_subset$base_wgs)
+  new_wgs_row$wgs_score <- mean(wgs_subset$wgs_score)
+  
+  #add the new row to the dataframe
+  new_wgs_split <- rbind(new_wgs_split, new_wgs_row)
+}
+
+#reassign wgs_cnv_class for ease of use
+wgs_cnv_class <- new_wgs_split
 
 #create a file with CNV label comparison (WGS and epiAneufinder predictions)
 cnv_data <- merge(cnv_data, wgs_cnv_class, by.x = "region", sort = F)
