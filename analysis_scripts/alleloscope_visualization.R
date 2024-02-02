@@ -50,7 +50,46 @@ cnv_data <- data.frame(region = seg_table$region, cnv = seg_table$cnv)
 theta_values <- merge(theta_values, cnv_data, all.x = T, by = "region", sort = F)
 rownames(theta_values) <- theta_values$region
 theta_values <- theta_values[, !names(theta_values) %in% "region"]
+
+#reorder theta_values by regions
+theta_order <- seg_table$region[seg_table$region %in% rownames(theta_values)]
+theta_values <- theta_values[theta_order,]
+
 write.csv(theta_values, "HMM_theta_full.csv")
+
+theta_values_imputed <- theta_values
+#impute missing theta values
+for (cell in 1:ncol(theta_values_imputed)){
+  for (region in (1:nrow(theta_values_imputed))){
+    #when NA is found, assign an average between last and next non-NA values to all NA's between them
+    if (is.na(theta_values_imputed[region, cell])){
+      #if NA is the first or last Non-NA for the cell, just take the remaining index
+      if (all(is.na(theta_values_imputed[region:nrow(theta_values_imputed),cell])) &&
+          all(is.na(theta_values_imputed[1:region,cell]))){
+        #this cycle is just for exclusion of cells with single non-NA region
+      } else if (all(is.na(theta_values_imputed[region:nrow(theta_values_imputed),cell]))){
+        #if this is the last non-NA
+        next_index <- nrow(theta_values_imputed) + 1
+        imputed_val <- theta_values_imputed[region-1, cell]
+      } else if (all(is.na(theta_values_imputed[1:region,cell]))){
+        #if this is the first non-NA
+        next_index <- (which(!is.na(theta_values_imputed[region:nrow(theta_values_imputed),cell])))[1] + region - 1
+        imputed_val <- theta_values_imputed[next_index, cell]
+      } else {
+        #get the index of the next non-NA value
+        next_index <- (which(!is.na(theta_values_imputed[region:nrow(theta_values_imputed),cell])))[1] + region - 1
+        
+        #get the previous and next values
+        previous_val <- theta_values_imputed[region-1, cell]
+        next_val <- theta_values_imputed[next_index, cell]
+        imputed_val <- (previous_val+next_val)/2
+      }
+      #assign the imputed values
+      theta_values_imputed[c(region:(next_index-1)), cell] <- imputed_val
+    }
+  }
+}
+write.csv(theta_values_imputed, "HMM_theta_full_imputed.csv")
 
 #add cnv class information to the SNP_counts
 SNP_counts <- merge(SNP_counts, cnv_data, all.x = T, by = "region", sort = F)
