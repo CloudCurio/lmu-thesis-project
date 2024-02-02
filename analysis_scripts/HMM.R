@@ -5,6 +5,10 @@
 library(depmixS4)
 library(dplyr)
 library(tidyr)
+library(grid)
+library(gridExtra)
+library(patchwork)
+library(RColorBrewer)
 library(fitdistrplus)
 library(MASS)
 library(caret)
@@ -18,10 +22,14 @@ library(ggpubr)
 #TODO: start substituting paths with variables for further conversion into a function
 stat_flag <- FALSE
 #options: "counts", "counts_and_theta", c("counts", "counts_and_theta")
-models_to_test <- c("counts", "counts_and_theta") 
+models_to_test <- c("counts", "counts_and_theta")
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_1mb_batch"
-output_dir <- "..//..//HMM outputs//Alleloscope_1mb_batch//"
+#adapt for the two-state model
+#TODO: implement it in the code
+cnv_state_vector <- c("loss", "base", "gain")
+
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_batch"
+output_dir <- "..//..//HMM outputs//Alleloscope_batch_run//"
 
 ###############################################################################
 # Load the input data
@@ -521,7 +529,7 @@ for (cnv_type in c(1:3)){
 
 write.csv(epiA_eval_df, paste(output_dir, "epiAneufinder_pseudobulk_metrics.csv", sep = ""))
 
-#calculate metrics per-cell predictions
+#calculate metrics for per-cell predictions
 #subset the per-cell predictions to only include regions, present in Alleloscope output and cells with enough theta hat values
 cnv_labels_per_cell_filtered <- cnv_labels_per_cell[rownames(cnv_labels_per_cell) %in% rownames(cnv_labels_pb), 
                                                     colnames(cnv_labels_per_cell) %in% all_cells_data_filtered$cell]
@@ -558,11 +566,29 @@ for (cell in colnames(cnv_labels_per_cell_filtered)){
   }
 }
 #save the output dataframe
-
 write.csv(epiA_eval, paste(output_dir, "epiAneufinder_per_cell_metrics.csv", sep = ""))
 
+#plot epiAneufinder distributions with summaries
+pdf(paste(output_dir, "epiA_metrics_dists_with_summary.pdf", sep = ""))
+par(mar = c(5.1, 4.1, 4.1, 8.1))
+for (cnv_class in c("loss", "base", "gain")){
+  plot_data <- epiA_eval[epiA_eval$cnv_class == cnv_class,]
+  for (metric in c("overall_Acc", "Balanced Accuracy", "Sensitivity", 
+                   "Specificity", "Precision", "Prevalence", "AUC")){
+    print(paste(cnv_type, metric))
+    hist(plot_data[,metric], breaks = 10, 
+         main = paste(metric, "distribution for", model,
+                      "model", paste("(", cnv_class, ")", sep = "")), 
+         xlab = metric)
+    summarized_data <- summary(plot_data[,metric])
+    summarized_data <- paste(names(summarized_data), round(summarized_data, 3), sep = ":")
+    legend("topright", legend = summarized_data, xpd = TRUE, inset = c(-0.3, 0))
+  }
+}
+dev.off()
 
 #plot epiAneufinder per-cell metrics against HMM metrics
+#one model against epiAneufinder
 for (model in names(models)){
   pdf(paste(output_dir, model, "_epiAneufinder_and_HMM_metrics_comparison.pdf", sep = ""))
   for (cnv_type in c("loss", "base", "gain")){
@@ -575,12 +601,12 @@ for (model in names(models)){
       plot_data <- data.frame(value = c(data_sub[, metric], epiA_sub[, metric]),
                               source_model = rep(c("HMM", "epiAneufinder"), each = nrow(data_sub)))
       # create a ggplot object
-      p <- ggplot(plot_data, aes(value, fill = source_model)) + 
+      p <- ggplot(plot_data, aes(value, fill = source_model)) +
         geom_histogram(position = "identity", alpha = 0.5, colour = "black", bins = 30) +
         scale_fill_brewer(palette = "Set1") +
         theme_minimal() +
-        labs(title = paste(metric, "distribution for the ", model, "HMM model and epiAneudinder \n",
-                           paste("(", cnv_type, ")", sep = "")), 
+        labs(title = paste(metric, "distribution for the ", model, "HMM model and epiAneufinder \n",
+                           paste("(", cnv_type, ")", sep = "")),
              x = metric, y = "Count")
       print(p)
     }
@@ -588,6 +614,78 @@ for (model in names(models)){
   dev.off()
 }
 
+#epiAneufinder against all models
+#set the y axis limits
+y_limits <- c(0, nrow(models[[1]][["metrics"]][[cnv_type]]))
+#create a list for plot_storage
+plot_list <- list()
+for (cnv_type in c("loss", "base", "gain")){
+  #subset the data by cnv type and model name
+  extracted_data <- list()
+  for (model in names(models)){
+    extracted_data[[model]] <- models[[model]][["metrics"]][[cnv_type]]
+    extracted_data[[model]]$overall_Acc <- models[[model]][["metrics"]][["overall"]]$overall_Acc
+    extracted_data[[model]]$source_model <- model
+    rownames(extracted_data[[model]]) <- c(1:nrow(extracted_data[[model]]))
+  }
+  extracted_data[["epiAneufinder"]] <- epiA_eval[(epiA_eval$cnv_class == cnv_type), 
+                                                 !(colnames(epiA_eval) %in% c("cell", "cnv_class"))]
+  extracted_data[["epiAneufinder"]]$source_model <- "epiAneufinder"
+  rownames(extracted_data[["epiAneufinder"]]) <- c(1:nrow(extracted_data[["epiAneufinder"]]))
+  
+  #join data into a dataframe
+  plot_data <- data.frame(matrix(nrow = 0, ncol = ncol(extracted_data[[1]])))
+  colnames(plot_data) <- colnames(extracted_data[[1]])
+  for (model in names(extracted_data)){
+    plot_data <- rbind(plot_data, extracted_data[[model]])
+  }
+  
+  #plot each metric (drop overall_Acc to avoid duplicate plots)
+  for (metric in colnames(plot_data)[colnames(plot_data) != c("overall_Acc", "source_model")]){
+    #if there is no sublist for the metric in the plot_list, create one
+    if (!(metric %in% names(plot_list))){
+      plot_list[[metric]] <- list()
+    }
+    
+    # create a ggplot object
+    p <- ggplot(plot_data, aes(.data[[metric]], fill = source_model)) + 
+      geom_histogram(position = "dodge", alpha = 0.5, colour = "black", bins = 15) +
+      scale_fill_brewer(palette = "Set1",
+                        labels = c("Counts", "Counts and AF", "epiAneufinder")) +
+      ylim(y_limits) +
+      theme_minimal() +
+      theme(legend.position = "bottom") +
+      labs(title = paste(metric, "distribution for\nHMM models and epiAneudinder",
+                         paste("(", cnv_type, ")", sep = "")), 
+           x = metric, y = "Number of cells", fill = "Model")
+    print(p)
+    
+    #save the plot into the plot_list
+    plot_list[[metric]][[cnv_type]] <- p
+  }
+}
+
+#save plots, grouped by metric
+pdf(paste(output_dir, "all_HMM_and_epiAneufinder_metrics_comparison.pdf", sep = ""),
+    width = 15, height = 6)
+
+for (metric in names(plot_list)){
+  #join plots for the same metric on the same page
+  do.call(grid.arrange, c(plot_list[[metric]], ncol = 3))
+}
+#plot overall_Acc
+p <- ggplot(plot_data, aes(overall_Acc, fill = source_model)) + 
+  geom_histogram(position = "dodge", alpha = 0.5, colour = "black", bins = 15) +
+  scale_fill_brewer(palette = "Set1",
+                    labels = c("Counts", "Counts and AF", "epiAneufinder")) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = paste("Overall Accuracy distribution for HMM models and epiAneudinder\n",
+                     paste("(", cnv_type, ")", sep = "")), 
+       x = metric, y = "Number of cells", fill = "Model")
+print(p)
+
+dev.off()
 ###############################################################################
 # Plot the results on a karyogram
 ###############################################################################
@@ -598,6 +696,23 @@ for (model in names(models)){
   HMM_preds <- models[[model]][["predictions"]]
   HMM_preds$chr <- gsub("chr([0-9]+):.*", "chr\\1", HMM_preds$region)
   HMM_preds$fragment <- as.numeric(gsub("chr[0-9]+:([0-9]+)", "\\1", HMM_preds$region))
+  
+  #add cell hierarchical clustering
+  #transform the predictions table into a cell by region form
+  wide_HMM_preds <- as.data.frame(pivot_wider(HMM_preds[, colnames(HMM_preds) %in% c("region", "cell", "HMM_pred")],
+                                              names_from = region, values_from = HMM_pred))
+  rownames(wide_HMM_preds) <- as.vector(wide_HMM_preds$cell)
+  wide_HMM_preds <- wide_HMM_preds[,-1]
+  #hierarchical clustering itself
+  dist_matrix <- dist(wide_HMM_preds)
+  dist_matrix[is.na(dist_matrix)] <- 0
+  hc_counts <- hclust(dist_matrix, method = "ward.D")
+  
+  #extract the order of cells
+  cell_order <- rownames(wide_HMM_preds)[hc_counts$order]
+  cell_order <- data.frame(Y_pos = c(1:length(cell_order)), cell = cell_order)
+  
+  HMM_preds <- left_join(HMM_preds, cell_order, by = "cell")
   
   #make chr column a factor
   HMM_preds$chr <- factor(HMM_preds$chr, levels = paste0("chr", 1:22))
@@ -614,7 +729,7 @@ for (model in names(models)){
     pull(X_pos)
   
   #create a plot for the predictions
-  p <- ggplot(HMM_preds, aes(x = X_pos, y = cell, fill = factor(HMM_pred))) +
+  p <- ggplot(HMM_preds, aes(x = X_pos, y = Y_pos, fill = factor(HMM_pred))) +
     geom_tile() +
     geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
     labs(title = paste("CNV predictions by the", model, "HMM"),
@@ -662,9 +777,25 @@ epiA_karyo_data <- cnv_labels_per_cell_filtered
 epiA_karyo_data$WGS_score <- epiA_truth
 epiA_karyo_data$region <- rownames(epiA_karyo_data)
 
+#add cell hierarchical clustering
+#transpose the data
+t_epiA_karyo <- as.data.frame(t(epiA_karyo_data[, !(colnames(epiA_karyo_data) %in% c("WGS_score", "region"))]))
+
+#hierarchical clustering itself
+dist_matrix <- dist(t_epiA_karyo)
+dist_matrix[is.na(dist_matrix)] <- 0
+hc_counts <- hclust(dist_matrix, method = "ward.D")
+
+#extract the order of cells
+cell_order <- rownames(t_epiA_karyo)[hc_counts$order]
+cell_order <- data.frame(Y_pos = c(1:length(cell_order)), cell = cell_order)
+
 #create a long format dataframe
 epiA_karyo_data <- pivot_longer(epiA_karyo_data, cols = -c(region, WGS_score), 
                                 names_to = "cell", values_to = "pred")
+
+#add Y_pos
+epiA_karyo_data <- left_join(epiA_karyo_data, cell_order, by = "cell")
 
 #add segment and chromosome columns
 epiA_karyo_data$chr <- gsub("chr([0-9]+):.*", "chr\\1", epiA_karyo_data$region)
@@ -686,7 +817,7 @@ chromosome_label_positions <- epiA_karyo_data %>%
   pull(X_pos)
 
 #create a plot for the predictions
-p <- ggplot(epiA_karyo_data, aes(x = X_pos, y = cell, fill = factor(pred))) +
+p <- ggplot(epiA_karyo_data, aes(x = X_pos, y = Y_pos, fill = factor(pred))) +
   geom_tile() +
   geom_vline(xintercept = chromosome_label_positions - 0.5, color = "black", linetype = "dotted", size = 0.5) +
   labs(title = paste("CNV predictions by epiAneufinder"),
