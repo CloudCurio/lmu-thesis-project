@@ -4,21 +4,21 @@ library(dplyr)
 library(Seurat)
 
 #set the working directory
-setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_runs\\Alleloscope_batch_fixed")
+setwd("C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\Alleloscope_runs\\Alleloscope_1mb_batch")
 
 #set binsize for correct wgs calculation
-binsize <- 500000
+binsize <- 1000000
 
 #load input files
 theta_values <- read.csv("bin_by_cell_theta.csv")
 colnames(theta_values)[which(colnames(theta_values) == "X")] <- "region"
 
-seg_table <- readRDS("..//..//seg_tables//seg_table_500k_epiAneuFinder_SNU601.rds")
+seg_table <- readRDS("..//..//seg_tables//seg_table_1mb_epiAneuFinder_SNU601.rds")
 SNP_counts <- read.csv("SNP_counts.csv")
-count_matrix <- readRDS("..//..//epiAneufinder runs//500kb bins//counts_gc_corrected.rds")
+count_matrix <- readRDS("..//..//epiAneufinder runs//1mb bins//counts_gc_corrected.rds")
 colnames(count_matrix) <- sub("^cell-", "", colnames(count_matrix))
 
-count_summary <- readRDS("..//..//epiAneufinder runs//500kb bins//count_summary.rds")
+count_summary <- readRDS("..//..//epiAneufinder runs//1mb bins//count_summary.rds")
 rowinfo <- rowRanges(count_summary)
 
 wgs_cnv_class <- read.csv("..//..//wgs_results_formated.csv")
@@ -32,7 +32,7 @@ SNP_counts <- SNP_counts[,-1]
 colnames(SNP_counts) <- c("region", "nSNP")
 
 #reform the per-cell CNV calls
-per_cell_CNVs <- as.data.frame(readRDS("..//..//epiAneufinder runs//500kb bins//cnv_calls.rds"))
+per_cell_CNVs <- as.data.frame(readRDS("..//..//epiAneufinder runs//1mb bins//cnv_calls.rds"))
 colnames(per_cell_CNVs) <- sub("^cell.", "", colnames(per_cell_CNVs))
 colnames(per_cell_CNVs) <- gsub("\\.", "-", colnames(per_cell_CNVs))
 per_cell_CNVs <- per_cell_CNVs+1
@@ -40,7 +40,12 @@ per_cell_CNVs <- per_cell_CNVs+1
 #obtain cnv values from the segmentation table
 seg_table$region <- NA
 for (i in 1:nrow(seg_table)){
-  seg_table$region[i] <- paste("chr", seg_table$chr[i],":", seg_table$start[i], sep = "")
+  if (grepl("chr", seg_table$chr[i])){
+    seg_table$region[i] <- paste(seg_table$chr[i],":", seg_table$start[i], sep = "")
+  } else {
+    seg_table$region[i] <- paste("chr", seg_table$chr[i],":", seg_table$start[i], sep = "")
+  }
+  
 }
 rownames(per_cell_CNVs) <- seg_table$region
 write.csv(per_cell_CNVs, "..//..//HMM inputs//epiAneufinder_per_cell_cnv.csv")
@@ -155,10 +160,14 @@ ggsave("mean_theta_per_region.pdf", p)
 #TODO:plot reads per region
 
 #Calculate wgs values for regions from cnv_data
+#check if chr is in proper form
+wgs_cnv_class$chr <- paste0("chr", wgs_cnv_class$chr)
+
 #create an empty dataframe
 new_wgs_split <- data.frame(matrix(nrow = 0, ncol = ncol(wgs_cnv_class)))
 colnames(new_wgs_split) <- colnames(wgs_cnv_class)
 for (region in 1:nrow(seg_table)){
+  print(region)
   #cut a slice of the wgs data from start to end of the seg_table region
   wgs_subset <- wgs_cnv_class[which(wgs_cnv_class$chr == seg_table$chr[region]),]
   wgs_subset <- wgs_subset[which(wgs_subset$start == seg_table$start[region]):

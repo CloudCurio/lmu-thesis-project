@@ -20,16 +20,21 @@ library(ggpubr)
 ###############################################################################
 
 #TODO: start substituting paths with variables for further conversion into a function
+seed_value <- 2024
 stat_flag <- FALSE
-#options: "counts", "counts_and_theta", c("counts", "counts_and_theta")
-models_to_test <- c("counts", "counts_and_theta")
+impute_theta_flag <- TRUE
+#options: "counts", "counts_and_theta", "counts_and_theta_imp" - for multiple use a vector
+models_to_test <- c("counts", "counts_and_theta", "counts_and_theta_imp")
 
 #adapt for the two-state model
 #TODO: implement it in the code
 cnv_state_vector <- c("loss", "base", "gain")
+posterior_threshold <- 0.8
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_batch"
-output_dir <- "..//..//HMM outputs//Alleloscope_batch_run//"
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_batch_fixed"
+output_dir <- paste("..//..//HMM outputs//Alleloscope_batch_fixed//", "3_state_model//posterior_limit_", posterior_threshold, "//", sep = "")
+
+dir.create(output_dir)
 
 ###############################################################################
 # Load the input data
@@ -40,6 +45,9 @@ setwd(input_dir)
 #load theta vals (full and filtered)
 theta_vals_full <- read.csv("HMM_theta_full.csv", row.names = 1)
 theta_vals_full$cnv <- NULL
+
+theta_vals_imputed <- read.csv("HMM_theta_full_imputed.csv", row.names = 1)
+theta_vals_imputed$cnv <- NULL
 
 theta_vals_filtered <- read.csv("HMM_theta_high_content.csv", row.names = 1)
 theta_vals_filtered$cnv <- NULL
@@ -57,6 +65,7 @@ counts_filtered <- read.csv("HMM_read_counts_filtered.csv", row.names = 1)
 
 #reorder theta_vals by regions
 theta_vals_full <- theta_vals_full[rownames(cnv_labels_pb),]
+theta_vals_imputed <- theta_vals_imputed[rownames(cnv_labels_pb),]
 theta_vals_filtered <- theta_vals_filtered[rownames(cnv_labels_pb),]
 
 ###############################################################################
@@ -102,7 +111,12 @@ all_cells_data_filtered <- full_join(counts_long, theta_long, by = c("region", "
 all_cells_data_filtered <- full_join(all_cells_data_filtered, cnv_labels_pb, by = "region")
 all_cells_data_filtered <- left_join(all_cells_data_filtered, pred_per_cell_long, by = c("region", "cell"))
 
-#get a dataset for unfiltered data
+#get a dataset for imputed_theta_data
+#change theta_vals_full to be identical to the imputed version if the impute_theta flag is enabled
+if (impute_theta_flag){
+  theta_vals_full <- theta_vals_imputed
+  theta_vals_full <- theta_vals_full[,colnames(theta_vals_filtered)]
+}
 #transform counts data
 counts_trimmed <- counts_full[, colnames(counts_full) %in% colnames(theta_vals_full)]
 
@@ -123,31 +137,32 @@ theta_long <- theta_long %>%
 all_cells_data_full <- full_join(counts_long, theta_long, by = c("region", "cell"))
 all_cells_data_full <- full_join(all_cells_data_full, cnv_labels_pb, by = "region", "cell")
 all_cells_data_full <- left_join(all_cells_data_full, pred_per_cell_long, by = c("region", "cell"))
+
 ###############################################################################
 # Explorative data analysis
 ###############################################################################
 
 if (stat_flag == TRUE){
-  #poisson fit test
-  fit_pois <- fitdist(dataset$counts, "pois")
-  plotdist(dataset$counts, "pois", para = list(lambda = fit_pois$estimate))
-  gofstat(fit_pois)
-  
-  #multinomial distribution
-  fit_negbin <- fitdist(dataset$counts, "nbinom", 
-                        start = list(size = 1, mu = mean(dataset$counts)))
-  plotdist(dataset$counts, "nbinom", 
-           para = list(size = fit_negbin$estimate[1], mu = fit_negbin$estimate[2]))
-  gofstat(fit_negbin)
-  
-  #log gaussian
-  log_data <- log(dataset$counts)
-  fit_normal <- fitdist(log_data, "norm")
-  plotdist(log_data, "norm", para = list(mean = fit_normal$estimate["mean"],
-                                         sd = fit_normal$estimate["sd"]))
-  foo <- gofstat(fit_normal)
-  ks_result <- ks.test(log_data, "pnorm", mean = fit_normal$estimate["mean"], 
-                       sd = fit_normal$estimate["sd"])
+  # #poisson fit test
+  # fit_pois <- fitdist(dataset$counts, "pois")
+  # plotdist(dataset$counts, "pois", para = list(lambda = fit_pois$estimate))
+  # gofstat(fit_pois)
+  # 
+  # #multinomial distribution
+  # fit_negbin <- fitdist(dataset$counts, "nbinom", 
+  #                       start = list(size = 1, mu = mean(dataset$counts)))
+  # plotdist(dataset$counts, "nbinom", 
+  #          para = list(size = fit_negbin$estimate[1], mu = fit_negbin$estimate[2]))
+  # gofstat(fit_negbin)
+  # 
+  # #log gaussian
+  # log_data <- log(dataset$counts)
+  # fit_normal <- fitdist(log_data, "norm")
+  # plotdist(log_data, "norm", para = list(mean = fit_normal$estimate["mean"],
+  #                                        sd = fit_normal$estimate["sd"]))
+  # foo <- gofstat(fit_normal)
+  # ks_result <- ks.test(log_data, "pnorm", mean = fit_normal$estimate["mean"], 
+  #                      sd = fit_normal$estimate["sd"])
   
   #class-by-class tests
   dataset_loss <- dataset[which(dataset$wgs_cnv_score<=1.5),]
@@ -198,7 +213,7 @@ if (stat_flag == TRUE){
 # Construct an HMM
 ###############################################################################
 
-set.seed(2024)
+set.seed(seed_value)
 
 #build a simple univariate model
 # train_mod <- depmix(response = counts ~ 1, data = dataset, nstates = 2,
@@ -210,9 +225,9 @@ set.seed(2024)
 #predict states for new data and estimate accuracy
 # cells <- unique(all_cells_data$cell)
 # cells <- cells[-which(cells == best_cell)]
-# set.seed(2024)
+# set.seed(seed_value)
 # test_set <- all_cells_data[which(all_cells_data$cell == sample(cells, 1)),]
-# set.seed(2024)
+# set.seed(seed_value)
 # test_mod <- depmix(response = counts ~ 1, data = test_set, nstates = 2,
 #                    family = poisson())
 # test_mod <- setpars(test_mod, getpars(f_train))
@@ -221,7 +236,7 @@ set.seed(2024)
 models <- replicate(length(models_to_test), list(), simplify = FALSE)
 names(models) <- models_to_test
 for (model in names(models)){
-  if (model == "full"){
+  if (model == "counts_and_theta_imp"){
     models[[model]][["data"]] <- all_cells_data_full
   } else {
     models[[model]][["data"]] <- all_cells_data_filtered
@@ -255,7 +270,7 @@ for (model in names(models)){
   
   #build a multivariate model for each cell
   for (cell in unique(models[[model]][["data"]]$cell)){
-    set.seed(2024)
+    set.seed(seed_value)
     data_sub <- models[[model]][["data"]][models[[model]][["data"]]$cell == cell,]
     
     #skip the cell if there are less than 5 non-NA theta-hat values present for it
@@ -282,7 +297,7 @@ for (model in names(models)){
     
     #determine which class is which CNV
     response_mtx <- summary(fm, which = "response")
-    #TODO: when we have 3 classes, change the label assigment to include losses and do it through min/max functions
+    
     loss_class <- which(response_mtx[,"Re1.(Intercept)"] == min(response_mtx[,"Re1.(Intercept)"]))
     gain_class <- which(response_mtx[,"Re1.(Intercept)"] == max(response_mtx[,"Re1.(Intercept)"]))
     base_class <- which(!(c(1,2,3) %in% c(loss_class, gain_class)))
@@ -292,9 +307,13 @@ for (model in names(models)){
     #                      1,2)
     # gain_class <- ifelse(base_class == 1, 2, 1)
     
-    #create prediction and reference vectors
+    #create prediction and reference vectors, extract the posterior probabilities
     true_classes <- ifelse(data_sub$wgs_score >= 2.5, gain_class, ifelse(data_sub$wgs_score <= 1.5, loss_class, base_class))
-    pred <- posterior(fm)[,1]
+    posterior_df <- posterior(fm)[,c(2:4)]
+    #assign classes with base_class as default and loss/gain only if posterior probability passes the posterior_threshold
+    posterior_df$pred <- ifelse(posterior_df[,loss_class] >= posterior_threshold, loss_class, 
+                                ifelse(posterior_df[,gain_class] >= posterior_threshold, gain_class, base_class))
+    pred <- posterior_df$pred
     
     #map predictions to the HMM_preds
     insert_df <- data_sub[, c("region", "cell")]
@@ -310,8 +329,10 @@ for (model in names(models)){
       
       #build a ROC curve
       binary_ref <- ifelse(true_classes == cnv_type, 1, 0)
-      binary_pred <- ifelse(pred == cnv_type, 1, 0)
-      roc_curve <- roc(binary_ref, binary_pred)
+      #OLD roc curve with binary preds
+      #binary_pred <- ifelse(pred == cnv_type, 1, 0)
+      #roc_curve <- roc(binary_ref, binary_pred)
+      roc_curve <- roc(binary_ref, posterior_df[,cnv_type])
       
       #add AUC as a column to the extracted_metrics df
       extracted_metrics$AUC <- auc(roc_curve)[1]
@@ -336,7 +357,7 @@ saveRDS(models, paste(output_dir, "models.RDS", sep = ""))
 
 # #build a multivariate model for each cell
 # for (cell in unique(all_cells_data$cell)){
-#   set.seed(2024)
+#   set.seed(seed_value)
 #   data_sub <- all_cells_data[all_cells_data$cell == cell,]
 #   
 #   #record library size and missing theta-hat count
@@ -452,12 +473,16 @@ dev.off()
 #per-class metrics
 pdf(paste(output_dir, "different_HMM_per_class_metrics_comparison.pdf", sep = ""))
 for (metric in colnames(per_class_metrics_df)){
-  for (cnv_type in c("loss", "base", "gain")){  
+  for (cnv_type in c("loss", "base", "gain")){
     extracted_metrics <- list()
     for (model in names(models)){
       extracted_metrics[[model]] <- models[[model]][["metrics"]][[cnv_type]][, metric] 
     }
-    plot_data <- data.frame(value = c(extracted_metrics[[1]], extracted_metrics[[2]]), 
+    value_column <- c()
+    for (model in names(extracted_metrics)){
+      value_column <- c(value_column, extracted_metrics[[model]])
+    }
+    plot_data <- data.frame(value = value_column, 
                             source_model = rep(names(extracted_metrics),
                                                each = length(extracted_metrics[[1]])))
     
@@ -481,7 +506,11 @@ for (metric in colnames(overall_metrics_df)){
   for (model in names(models)){
     extracted_metrics[[model]] <- models[[model]][["metrics"]][["overall"]][, metric] 
   }
-  plot_data <- data.frame(value = c(extracted_metrics[[1]], extracted_metrics[[2]]), 
+  value_column <- c()
+  for (model in names(extracted_metrics)){
+    value_column <- c(value_column, extracted_metrics[[model]])
+  }
+  plot_data <- data.frame(value = value_column, 
                           source_model = rep(names(extracted_metrics),
                                              each = length(extracted_metrics[[1]])))
   
@@ -587,33 +616,6 @@ for (cnv_class in c("loss", "base", "gain")){
 }
 dev.off()
 
-#plot epiAneufinder per-cell metrics against HMM metrics
-#one model against epiAneufinder
-for (model in names(models)){
-  pdf(paste(output_dir, model, "_epiAneufinder_and_HMM_metrics_comparison.pdf", sep = ""))
-  for (cnv_type in c("loss", "base", "gain")){
-    #subset the data by cnv type and model name
-    data_sub <- models[[model]][["metrics"]][[cnv_type]]
-    epiA_sub <- epiA_eval[(epiA_eval$cnv_class == cnv_type),]
-    #plot each metric
-    for (metric in colnames(data_sub)){
-      #create a dataframe for plotting
-      plot_data <- data.frame(value = c(data_sub[, metric], epiA_sub[, metric]),
-                              source_model = rep(c("HMM", "epiAneufinder"), each = nrow(data_sub)))
-      # create a ggplot object
-      p <- ggplot(plot_data, aes(value, fill = source_model)) +
-        geom_histogram(position = "identity", alpha = 0.5, colour = "black", bins = 30) +
-        scale_fill_brewer(palette = "Set1") +
-        theme_minimal() +
-        labs(title = paste(metric, "distribution for the ", model, "HMM model and epiAneufinder \n",
-                           paste("(", cnv_type, ")", sep = "")),
-             x = metric, y = "Count")
-      print(p)
-    }
-  }
-  dev.off()
-}
-
 #epiAneufinder against all models
 #set the y axis limits
 y_limits <- c(0, nrow(models[[1]][["metrics"]][[cnv_type]]))
@@ -651,11 +653,11 @@ for (cnv_type in c("loss", "base", "gain")){
     p <- ggplot(plot_data, aes(.data[[metric]], fill = source_model)) + 
       geom_histogram(position = "dodge", alpha = 0.5, colour = "black", bins = 15) +
       scale_fill_brewer(palette = "Set1",
-                        labels = c("Counts", "Counts and AF", "epiAneufinder")) +
+                        labels = c("Counts", "Counts and AF", "Counts and imputed AF", "epiAneufinder")) +
       ylim(y_limits) +
       theme_minimal() +
       theme(legend.position = "bottom") +
-      labs(title = paste(metric, "distribution for\nHMM models and epiAneudinder",
+      labs(title = paste(metric, "distribution for\nHMM models and epiAneufinder",
                          paste("(", cnv_type, ")", sep = "")), 
            x = metric, y = "Number of cells", fill = "Model")
     print(p)
@@ -677,10 +679,10 @@ for (metric in names(plot_list)){
 p <- ggplot(plot_data, aes(overall_Acc, fill = source_model)) + 
   geom_histogram(position = "dodge", alpha = 0.5, colour = "black", bins = 15) +
   scale_fill_brewer(palette = "Set1",
-                    labels = c("Counts", "Counts and AF", "epiAneufinder")) +
+                    labels = c("Counts", "Counts and AF", "Counts and imputed AF", "epiAneufinder")) +
   theme_minimal() +
   theme(legend.position = "bottom") +
-  labs(title = paste("Overall Accuracy distribution for HMM models and epiAneudinder\n",
+  labs(title = paste("Overall Accuracy distribution for HMM models and epiAneufinder\n",
                      paste("(", cnv_type, ")", sep = "")), 
        x = metric, y = "Number of cells", fill = "Model")
 print(p)
@@ -704,8 +706,10 @@ for (model in names(models)){
   rownames(wide_HMM_preds) <- as.vector(wide_HMM_preds$cell)
   wide_HMM_preds <- wide_HMM_preds[,-1]
   #hierarchical clustering itself
+  set.seed(seed_value)
   dist_matrix <- dist(wide_HMM_preds)
   dist_matrix[is.na(dist_matrix)] <- 0
+  set.seed(seed_value)
   hc_counts <- hclust(dist_matrix, method = "ward.D")
   
   #extract the order of cells
