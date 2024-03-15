@@ -6,16 +6,18 @@
 
 library(fitdistrplus)
 library(MASS)
+library(dplyr)
+library(tidyr)
 
 ###############################################################################
 # Define settings values
 ###############################################################################
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_1mb_batch\\"
-output_dir <- paste("..//..//HMM outputs//Alleloscope_1mb_batch//", "fitness_tests//", sep = "")
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_1mb_100nSNP\\"
+output_dir <- paste("..//..//HMM outputs//Alleloscope_1mb_100nSNP//", "fitness_tests//", sep = "")
 
 #change to 2 for the two-state model
-nstates <- 2
+nstates <- 3
 #options: counts, theta_hat
 responses <- c("counts", "theta_hat")
 
@@ -130,57 +132,144 @@ if (nstates == 2){
   state_subdata_list[["gain"]] <- dataset[which(dataset$wgs_score>=2.5),]
 }
 
+#create a storage list for test outputs
+tests_list <- list()
+
+#run the tests
 for (cnv_state in names(state_subdata_list)){
-  data_sub <- state_subdata_list[[cnv_state]]
+  tests_list[[cnv_state]] <- list()
+  data_sub_all_cells <- state_subdata_list[[cnv_state]]
   
   for (resp in responses[1]){
     print(paste(cnv_state, resp))
     pdf(paste(output_dir, nstates, resp, cnv_state, "fits.pdf", sep = "_"))
     
-    data_vector <- unlist(data_sub[,resp])
-    if (resp == "theta_hat"){
-      data_vector <- data_vector[!is.na(data_vector)]
-      warning("Please consider that for AF fit NA values are dropped")
+    for (cell in unique(dataset$cell)){
+      tests_list[[cnv_state]][[cell]] <- list("counts" = list(), "theta" = list())
+      tests_list[[cnv_state]][[cell]][["counts"]] <- list()
+      tests_list[[cnv_state]][[cell]][["theta"]] <- list()
+      
+      data_sub <- data_sub_all_cells[data_sub_all_cells$cell == cell,]
+      
+      data_vector <- unlist(data_sub[,resp])
+      if (resp == "theta_hat"){
+        data_vector <- data_vector[!is.na(data_vector)]
+        warning("Please consider that for AF fit NA values are dropped")
+      }
+      
+      #poisson
+      fit_pois <- fitdist(data_vector, "pois")
+      plotdist(data_vector, "pois", para = list(lambda = fit_pois$estimate))
+      # title(main = paste("Poisson distribution fit for counts data of ", cnv_state,
+      #                    "CNV state\n(cell: ", cell, ")", sep = ""))
+      tests_list[[cnv_state]][[cell]][["counts"]][["poisson"]] <- gofstat(fit_pois)
+      
+      #neg.binom.
+      fit_negbin <- fitdist(data_vector, "nbinom", 
+                            start = list(size = 1, mu = mean(data_vector)))
+      plotdist(data_vector, "nbinom", 
+               para = list(size = fit_negbin$estimate[1], mu = fit_negbin$estimate[2]))
+      # title(main = paste("Neg. bin. distribution fit for counts data of ", cnv_state,
+      #                    "CNV state\n(cell: ", cell, ")", sep = ""))
+      gofstat(fit_negbin)
+      tests_list[[cnv_state]][[cell]][["counts"]][["neg_bin"]] <- gofstat(fit_negbin)
+      
+      #log gaussian
+      log_data <- log(data_vector)
+      fit_normal <- fitdist(log_data, "norm")
+      plotdist(log_data, "norm", para = list(mean = fit_normal$estimate["mean"],
+                                             sd = fit_normal$estimate["sd"]))
+      # title(main = paste("Gaussian distribution fit for log_transformed counts data of ", cnv_state,
+      #                    "CNV state\n(cell: ", cell, ")", sep = ""))
+      foo <- gofstat(fit_normal)
+      ks_result <- ks.test(log_data, "pnorm", mean = fit_normal$estimate["mean"], 
+                           sd = fit_normal$estimate["sd"])
+      tests_list[[cnv_state]][[cell]][["counts"]][["gaussian_log"]] <- ks_result
     }
-    
-    #poisson
-    fit_pois <- fitdist(data_vector, "pois")
-    plotdist(data_vector, "pois", para = list(lambda = fit_pois$estimate))
-    gofstat(fit_pois)
-    
-    #neg.binom.
-    fit_negbin <- fitdist(data_vector, "nbinom", 
-                          start = list(size = 1, mu = mean(data_vector)))
-    plotdist(data_vector, "nbinom", 
-             para = list(size = fit_negbin$estimate[1], mu = fit_negbin$estimate[2]))
-    gofstat(fit_negbin)
-    
-    #log gaussian
-    log_data <- log(data_vector)
-    fit_normal <- fitdist(log_data, "norm")
-    plotdist(log_data, "norm", para = list(mean = fit_normal$estimate["mean"],
-                                           sd = fit_normal$estimate["sd"]))
-    foo <- gofstat(fit_normal)
-    ks_result <- ks.test(log_data, "pnorm", mean = fit_normal$estimate["mean"], 
-                         sd = fit_normal$estimate["sd"])
-    
     dev.off()
-  }
-  #temporary theta hat solution
-  if ("theta_hat" %in% responses){
-    warning("Please consider that for AF fit NA values are dropped")
-    pdf(paste(output_dir, nstates, "AF", cnv_state, "fits.pdf", sep = "_"))
-    data_vector <- data_sub$theta_hat[!is.na(data_sub$theta_hat)]
-    fit_normal <- fitdist(data_vector, "norm")
-    plotdist(data_vector, "norm", para = list(mean = fit_normal$estimate["mean"],
-                                               sd = fit_normal$estimate["sd"]))
-    foo <- gofstat(fit_normal)
-    ks_result <- ks.test(data_vector, "pnorm", mean = fit_normal$estimate["mean"], 
-                         sd = fit_normal$estimate["sd"])
     
-    dev.off()
+    if ("theta_hat" %in% responses){
+      warning("Please consider that for AF fit NA values are dropped")
+      pdf(paste(output_dir, nstates, "AF", cnv_state, "fits.pdf", sep = "_"))
+      
+      for (cell in unique(dataset$cell)){
+        #temporary theta hat solution
+        data_sub <- data_sub_all_cells[data_sub_all_cells$cell == cell,]
+        
+        data_vector <- data_sub$theta_hat[!is.na(data_sub$theta_hat)]
+        
+        #skip cells with less than 1 AF value
+        if (sum(!is.na(data_vector)) >= 2){
+          fit_normal <- fitdist(data_vector, "norm")
+          plotdist(data_vector, "norm", para = list(mean = fit_normal$estimate["mean"],
+                                                    sd = fit_normal$estimate["sd"]))
+          # title(main = paste("Gaussian distribution fit for AF data of ", cnv_state,
+          #                    "CNV state\n(cell: ", cell, ")", sep = ""))
+          
+          foo <- gofstat(fit_normal)
+          ks_result <- ks.test(data_vector, "pnorm", mean = fit_normal$estimate["mean"], 
+                               sd = fit_normal$estimate["sd"])
+          tests_list[[cnv_state]][[cell]][["theta"]] <- ks_result
+        } else {
+          plot(x = 1, y = 1, type = "n", xlim = c(0, 100), ylim = c(0, 100), 
+               xlab = "X-axis label", ylab = "Y-axis label", 
+               main = "This is a stand-in for missing theta plots\nIt means there were less than 2 AF vals")
+        }
+      }
+      
+      dev.off()
+    }
   }
 }
 
-#figure out why theta hat estimation fails
 
+#reshape the tests_list for easier readability and save it
+new_tests_list <- list()
+for (cell in unique(dataset$cell)){
+  new_tests_list[[cell]] <- list()
+  for (cnv_state in names(state_subdata_list)){
+    new_tests_list[[cell]][[cnv_state]] <- list()
+  }
+}
+
+for (cell in names(new_tests_list)){
+  for (cnv_state in names(new_tests_list[[cell]])){
+    new_tests_list[[cell]][[cnv_state]] <- tests_list[[cnv_state]][[cell]]
+  }
+}
+
+saveRDS(new_tests_list, paste(output_dir, nstates, resp, cnv_state, "tests.RDS", sep = "_"))
+
+#get p-value summaries for tests to evaluate several cells together
+for (cnv_state in names(state_subdata_list)){
+  p_val_df <- data.frame(matrix(ncol = 4, nrow = 0))
+  colnames(p_val_df) <- c("counts_poisson", "counts_neg_bin", "counts_norm_log", "AF_norm")
+  for (cell in names(new_tests_list)){
+    p_val_extracted <- data.frame(matrix(ncol = 4, nrow = 1))
+    colnames(p_val_extracted) <- c("counts_poisson", "counts_neg_bin", "counts_norm_log", "AF_norm")
+    
+    rownames(p_val_extracted) <- c(cell)
+    
+    p_val_extracted[cell, "counts_poisson"] <- new_tests_list[[cell]][[cnv_state]][["counts"]][["poisson"]]$chisqpvalue
+    if (is.null(new_tests_list[[cell]][[cnv_state]][["counts"]][["neg_bin"]]$chisqpvalue)){
+      p_val_extracted[cell, "counts_neg_bin"] <- 0
+    } else {
+      p_val_extracted[cell, "counts_neg_bin"] <- new_tests_list[[cell]][[cnv_state]][["counts"]][["neg_bin"]]$chisqpvalue
+    }
+    p_val_extracted[cell, "counts_norm_log"] <- new_tests_list[[cell]][[cnv_state]][["counts"]][["gaussian_log"]]$p.value
+    if (length(new_tests_list[[cell]][[cnv_state]][["theta"]]) != 0){
+      p_val_extracted[cell, "AF_norm"] <- new_tests_list[[cell]][[cnv_state]][["theta"]]$p.value
+    } else {
+      p_val_extracted[cell, "AF_norm"] <- NA
+    }
+    
+    p_val_df <- rbind(p_val_df, p_val_extracted)
+  }
+  
+  p_summary <- summary(p_val_df)
+  print(cnv_state)
+  print(p_summary)
+  
+  write.csv(p_val_df, paste(output_dir, nstates, cnv_state, "p_values.csv", sep = "_"))
+  write.csv(p_summary, paste(output_dir, nstates, cnv_state, "p_summary.csv", sep = "_"))
+}

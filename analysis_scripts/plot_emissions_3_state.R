@@ -3,7 +3,7 @@
 library(depmixS4)
 
 #set the directories
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM outputs\\Alleloscope_1mb_100nSNP\\3_state_model"
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM outputs\\Alleloscope_500kb_100nSNP\\3_state_model"
 output_dir <- ".\\emission_plots\\"
 
 #set the working directory

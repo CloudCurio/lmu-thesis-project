@@ -304,9 +304,10 @@ for (model in names(models)){
     # gain_class <- ifelse(base_class == 1, 2, 1)
     
     #create prediction and reference vectors
-    true_classes <- ifelse(data_sub$wgs_score >= 2.5, gain_class, base_class)
+    true_classes <- ifelse(data_sub$wgs_score >= 2.5, 3, 2)
     pred <- posterior(fm)[,1]
     posterior_df <- posterior(fm)[,c(2:3)]
+    posterior_df <- posterior_df[, c(base_class, gain_class)]
     
     #map predictions to the HMM_preds
     insert_df <- data_sub[, c("region", "cell")]
@@ -315,14 +316,14 @@ for (model in names(models)){
     HMM_preds <- rbind(HMM_preds, insert_df)
     
     #create a confusion matrix and extract the metrics
-    confmat <- confusionMatrix(data = as.factor(pred), reference <- as.factor(true_classes))
+    confmat <- confusionMatrix(data = as.factor(insert_df$HMM_pred), reference <- as.factor(true_classes))
     
     #extract the metrics into a single-row dataframe
     extracted_metrics <- confmat$byClass
     
     #build a ROC curve (focus on gain)
     #binarize the controls
-    binary_ref <- ifelse(true_classes == gain_class, 1, 0)
+    binary_ref <- ifelse(insert_df$WGS_score == 3, 1, 0)
     roc_curve <- roc(binary_ref, posterior_df[,gain_class])
     
     #add AUC as a column to the extracted_metrics df
@@ -339,6 +340,15 @@ for (model in names(models)){
   models[[model]][["metrics_summary"]] <- list("base" = NA, "gain" = NA)
   for (cnv_type in names(models[[model]][["metrics_summary"]])){
     models[[model]][["metrics_summary"]][[cnv_type]] <- summary(models[[model]][["metrics"]][[cnv_type]])
+  }
+}
+
+#leave only the relevant metrics
+for (model in names(models)){
+  for (metric in colnames(models[[model]][["metrics"]][["by_Class"]])){
+    if (all(is.nan(models[[model]][["metrics"]][["by_Class"]][,metric]))){
+      models[[model]][["metrics"]][["by_Class"]][,metric] <- 0
+    }
   }
 }
 
@@ -766,7 +776,7 @@ for (model in names(models)){
          fill = "CNV class") +
     scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
                        expand = c(0.05, 0)) +
-    scale_fill_manual(values = c("#1fb424", "#b4421f"),
+    scale_fill_manual(values = c("#2171B5", "#1fb424", "#b4421f"),
                       labels = c("base", "gain")) +
     theme_minimal() +
     theme(legend.position = "top", 

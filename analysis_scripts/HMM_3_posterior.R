@@ -29,10 +29,10 @@ models_to_test <- c("counts", "counts_and_theta", "counts_and_theta_imp")
 #adapt for the two-state model
 #TODO: implement it in the code
 cnv_state_vector <- c("loss", "base", "gain")
-posterior_threshold <- 0.8
+posterior_threshold <- 0.99
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_batch_fixed"
-output_dir <- paste("..//..//HMM outputs//Alleloscope_batch_fixed//", "3_state_model//posterior_limit_", posterior_threshold, "//", sep = "")
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_500kb_100nSNP"
+output_dir <- paste("..//..//HMM outputs//Alleloscope_500kb_100nSNP//", "3_state_model//posterior_limit_", posterior_threshold, "//", sep = "")
 
 dir.create(output_dir)
 
@@ -314,6 +314,7 @@ for (model in names(models)){
     posterior_df$pred <- ifelse(posterior_df[,loss_class] >= posterior_threshold, loss_class, 
                                 ifelse(posterior_df[,gain_class] >= posterior_threshold, gain_class, base_class))
     pred <- posterior_df$pred
+    posterior_df <- posterior_df[, c(loss_class, base_class, gain_class)]
     
     #map predictions to the HMM_preds
     insert_df <- data_sub[, c("region", "cell")]
@@ -322,13 +323,13 @@ for (model in names(models)){
     HMM_preds <- rbind(HMM_preds, insert_df)
     
     #create a confusion matrix and extract the metrics
-    confmat <- confusionMatrix(data = as.factor(pred), reference <- as.factor(true_classes))
+    confmat <- confusionMatrix(data = as.factor(insert_df$HMM_pred), reference <- as.factor(insert_df$WGS_score))
     for (cnv_type in c(1:3)){
       #extract the metrics into a single-row dataframe
       extracted_metrics <- confmat$byClass[cnv_type,]
       
       #build a ROC curve
-      binary_ref <- ifelse(true_classes == cnv_type, 1, 0)
+      binary_ref <- ifelse(insert_df$WGS_score == cnv_type, 1, 0)
       #OLD roc curve with binary preds
       #binary_pred <- ifelse(pred == cnv_type, 1, 0)
       #roc_curve <- roc(binary_ref, binary_pred)
@@ -352,6 +353,16 @@ for (model in names(models)){
   }
 }
 
+#leave only the relevant metrics
+for (model in names(models)){
+  for (cnv_class in c("loss", "base", "gain")){
+    for (metric in colnames(models[[model]][["metrics"]][[cnv_class]])){
+      if (all(is.nan(models[[model]][["metrics"]][[cnv_class]][,metric]))){
+        models[[model]][["metrics"]][[cnv_class]][,metric] <- 0
+      }
+    }
+  }
+}
 #save the models list as an RDS
 saveRDS(models, paste(output_dir, "models.RDS", sep = ""))
 

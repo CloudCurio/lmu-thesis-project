@@ -24,7 +24,7 @@ seed_value <- 2024
 
 stat_flag <- FALSE
 impute_theta_flag <- TRUE
-posterior_threshold = 0.99
+posterior_threshold = 0.8
 #options: "counts", "counts_and_theta", "counts_and_theta_imp" - for multiple use a vector
 models_to_test <- c("counts", "counts_and_theta", "counts_and_theta_imp")
 
@@ -32,10 +32,10 @@ models_to_test <- c("counts", "counts_and_theta", "counts_and_theta_imp")
 #TODO: implement it in the code
 cnv_state_vector <- c("base", "gain")
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_500kb_300nSNP"
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_1mb_100nSNP"
 setwd(input_dir)
 
-output_dir <- paste("..//..//HMM outputs//Alleloscope_500kb_300nSNP//", "2_state_model//_posterior_limit_", posterior_threshold, "//", sep = "")
+output_dir <- paste("..//..//HMM outputs//Alleloscope_1mb_100nSNP//", "2_state_model//_posterior_limit_", posterior_threshold, "//", sep = "")
 
 dir.create(output_dir)
 
@@ -306,12 +306,13 @@ for (model in names(models)){
     # gain_class <- ifelse(base_class == 1, 2, 1)
     
     #create prediction and reference vectors
-    true_classes <- ifelse(data_sub$wgs_score >= 2.5, gain_class, base_class)
+    true_classes <- ifelse(data_sub$wgs_score >= 2.5, 3, 2)
     posterior_df <- posterior(fm)[,c(2:3)]
     
     #assign prediction labels based on posterior probabilities
     posterior_df$pred <- ifelse(posterior_df[,gain_class] >= posterior_threshold, gain_class, base_class)
     pred <- posterior_df$pred
+    posterior_df <- posterior_df[, c(base_class, gain_class)]
     
     #map predictions to the HMM_preds
     insert_df <- data_sub[, c("region", "cell")]
@@ -320,14 +321,14 @@ for (model in names(models)){
     HMM_preds <- rbind(HMM_preds, insert_df)
     
     #create a confusion matrix and extract the metrics
-    confmat <- confusionMatrix(data = as.factor(pred), reference <- as.factor(true_classes))
+    confmat <- confusionMatrix(data = as.factor(insert_df$HMM_pred), reference <- as.factor(true_classes))
     
     #extract the metrics into a single-row dataframe
     extracted_metrics <- confmat$byClass
     
     #build a ROC curve (focus on gain)
     #binarize the controls
-    binary_ref <- ifelse(true_classes == gain_class, 1, 0)
+    binary_ref <- ifelse(insert_df$WGS_score == 3, 1, 0)
     roc_curve <- roc(binary_ref, posterior_df[,gain_class])
     
     #add AUC as a column to the extracted_metrics df
@@ -344,6 +345,15 @@ for (model in names(models)){
   models[[model]][["metrics_summary"]] <- list("base" = NA, "gain" = NA)
   for (cnv_type in names(models[[model]][["metrics_summary"]])){
     models[[model]][["metrics_summary"]][[cnv_type]] <- summary(models[[model]][["metrics"]][[cnv_type]])
+  }
+}
+
+#leave only the relevant metrics
+for (model in names(models)){
+  for (metric in colnames(models[[model]][["metrics"]][["by_Class"]])){
+    if (all(is.nan(models[[model]][["metrics"]][["by_Class"]][,metric]))){
+      models[[model]][["metrics"]][["by_Class"]][,metric] <- 0
+    }
   }
 }
 
@@ -771,7 +781,7 @@ for (model in names(models)){
          fill = "CNV class") +
     scale_x_continuous(breaks = chromosome_label_positions, labels = unique(HMM_preds$chr),
                        expand = c(0.05, 0)) +
-    scale_fill_manual(values = c("#1fb424", "#b4421f"),
+    scale_fill_manual(values = c("#2171B5", "#1fb424", "#b4421f"),
                       labels = c("base", "gain")) +
     theme_minimal() +
     theme(legend.position = "top", 

@@ -30,8 +30,8 @@ models_to_test <- c("counts", "counts_and_theta", "counts_and_theta_imp")
 #TODO: implement it in the code
 cnv_state_vector <- c("loss", "base", "gain")
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_batch_fixed"
-output_dir <- paste("..//..//HMM outputs//Alleloscope_batch_fixed//", "3_state_model//", sep = "")
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_500kb_100nSNP"
+output_dir <- paste("..//..//HMM outputs//Alleloscope_500kb_100nSNP//", "3_state_model//", sep = "")
 
 dir.create(output_dir)
 
@@ -310,6 +310,7 @@ for (model in names(models)){
     true_classes <- ifelse(data_sub$wgs_score >= 2.5, gain_class, ifelse(data_sub$wgs_score <= 1.5, loss_class, base_class))
     pred <- posterior(fm)[,1]
     posterior_df <- posterior(fm)[,c(2:4)]
+    posterior_df <- posterior_df[, c(loss_class, base_class, gain_class)]
     
     #map predictions to the HMM_preds
     insert_df <- data_sub[, c("region", "cell")]
@@ -318,13 +319,13 @@ for (model in names(models)){
     HMM_preds <- rbind(HMM_preds, insert_df)
     
     #create a confusion matrix and extract the metrics
-    confmat <- confusionMatrix(data = as.factor(pred), reference <- as.factor(true_classes))
+    confmat <- confusionMatrix(data = as.factor(insert_df$HMM_pred), reference <- as.factor(insert_df$WGS_score))
     for (cnv_type in c(1:3)){
       #extract the metrics into a single-row dataframe
       extracted_metrics <- confmat$byClass[cnv_type,]
       
       #build a ROC curve
-      binary_ref <- ifelse(true_classes == cnv_type, 1, 0)
+      binary_ref <- ifelse(insert_df$WGS_score == cnv_type, 1, 0)
       #OLD roc curve with binary preds
       #binary_pred <- ifelse(pred == cnv_type, 1, 0)
       #roc_curve <- roc(binary_ref, binary_pred)
@@ -345,6 +346,17 @@ for (model in names(models)){
   models[[model]][["metrics_summary"]] <- list("loss" = NA, "base" = NA, "gain" = NA)
   for (cnv_type in names(models[[model]][["metrics_summary"]])){
     models[[model]][["metrics_summary"]][[cnv_type]] <- summary(models[[model]][["metrics"]][[cnv_type]])
+  }
+}
+
+#leave only the relevant metrics
+for (model in names(models)){
+  for (cnv_class in c("loss", "base", "gain")){
+    for (metric in colnames(models[[model]][["metrics"]][[cnv_class]])){
+      if (all(is.nan(models[[model]][["metrics"]][[cnv_class]][,metric]))){
+        models[[model]][["metrics"]][[cnv_class]][,metric] <- 0
+      }
+    }
   }
 }
 
@@ -576,8 +588,7 @@ for (cell in colnames(cnv_labels_per_cell_filtered)){
     
     #build ROC curves
     binary_ref <- ifelse(epiA_truth == which(c("loss", "base", "gain") == cnv_class), 1, 0)
-    binary_pred <- ifelse(epiA_pred == which(c("loss", "base", "gain") == cnv_class), 1, 0)
-    roc_curve <- roc(binary_ref, binary_pred)
+    roc_curve <- roc(binary_ref, epiA_pred)
     
     #add AUC as a column to the output df
     extracted_metrics$AUC <- auc(roc_curve)[1]
