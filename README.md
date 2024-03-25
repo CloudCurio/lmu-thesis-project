@@ -34,6 +34,7 @@ This folder covers steps 1 and 2 of the workflow above. The inputs required are:
 - dict_creation.sh - constructs a .dict file for the provided reference genome .fa data;
 - download_SNU601.sh - downloads the SNU601 WGS data in the .fastq format;
 - cellranger_atac_SNU601.sh - downloads the scATAC-seq data in the .fastq format;
+- filter_bam.sh - filters the bam file for autosomal chromosomes (taken from Katharina Schmid);
 ### Alleloscope data preparation
 - snv_calling_gatk.sh - gets the .vcf file with SNP info, using the reference genome .fa file and the .bam file of the scATAC-data;
 - snv_calling_gatk_hc_only.sh - a shorter version of the above script, only including the HaplotypeCaller command. Useful for saving time rerunning the script in case of HaplotypeCaller errors;
@@ -43,3 +44,12 @@ This folder covers steps 1 and 2 of the workflow above. The inputs required are:
 - Cbn_matrix_server_paths.R - uses the function above and allows to set the paths to inputs/outputs for the server;
 - Signac_gen_bin_cell.R - creates the bin-by-cell matric using Signac, using chrom_sizes.txt, barcodes.tsv.gz, and fragments.tsv.gz files;
 - Gen_bin_cell_atac.R - old script for the same task as Signac_gen_bin_cell.R. **Not used anymore, ignore this file**;
+- generate_seg_table.R - an R function that calculates pseudobulk CNV predictions using the epiAneufinder's segmentation table (results_table.tsv) and writes chromosome labels in character form instead of integer. **A function, used in the next step, don't run individually**
+- merge_segments.R - a standalone alternative to the previous function. Does the same thing, but can also merge neighbouring segments with the same classes. **Was used earlier, but not anymore**
+
+### Running Alleloscope
+- Alleloscope_fun.R - runs Alleloscope using previously created files (see documentation at the start of the script). Intended for per-chromosome batch runs, sourced by the next script;
+- Alleloscope_batch_run.R - runs the Alleloscope_fun.R script on each chromosome individually. Uses the generate_seg_table.R function script from before to get the segmentation results. After running Alleloscope on a chromosome, immediately uses summarize_alleloscope.R (see below, in the "" section) function on the outputs to avoid flooding the output folder with hundreds of files. Called by the bash script below;
+- Alleloscope.sh - performs Alleloscope analysis using the above scripts;
+- get_seg_table.R - extracts the filtered segmentation table from the Alleloscope output .rds object, stores it in a separate .rds file;
+- 
