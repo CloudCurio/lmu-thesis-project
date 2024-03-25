@@ -19,3 +19,19 @@ Overall workflow of the tool can be described as follows:
 2. Prepare data for Alleloscope analysis
 3. Predict Allele Frequency (AF) information using Alleloscope
 4. Use read counts and AF information to train an HMM and predict CNVs
+
+Scripts for the project are split into 3 folders: "data_prep_alleloscope", "analysis_scripts", and "epiAneufinder_scripts". Folders "debug_function_versions" and "tutorial_scripts" are technical and should be ignored.
+
+## "data_prep_alleloscope" folder
+This folder covers steps 1 and 2 of the workflow above. The inputs required are:
+- hg38.fa - human genome sequence in the FASTA format;
+- 
+
+Scripts in the folder (in recommended order of application):
+
+**Initial data prep:**
+- dict_creation.sh - constructs a .dict file for the provided genome .fa data;
+- download_SNU601.sh - downloads the SNU601 WGS data in the .fastq format;
+- cellranger_atac_SNU601.sh - downloads the scATAC-seq data in the .fastq format;
+
+- 
