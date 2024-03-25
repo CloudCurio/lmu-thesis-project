@@ -24,14 +24,22 @@ Scripts for the project are split into 3 folders: "data_prep_alleloscope", "anal
 
 ## "data_prep_alleloscope" folder
 This folder covers steps 1 and 2 of the workflow above. The inputs required are:
-- hg38.fa - human genome sequence in the FASTA format;
-- 
+- hg38.fa - reference genome sequence in the FASTA format;
+- possorted_new_header.bam - position-sorted BAM file of the scATAC assay. Make sure that the header of the BAM is correct, since it creates errors with the tools used;
+- barcodes.tsv - a .tsv file containing all cellular barcodes in the scATAC assay;
+- chrom_sizes.txt - a text file containing sizes of all chromosomes in the data;
+- fragments.tsv.gz - a compressed TSV file listing scATAC fragments in the data;
 
-Scripts in the folder (in recommended order of application):
-
-**Initial data prep:**
-- dict_creation.sh - constructs a .dict file for the provided genome .fa data;
+### Initial data prep:
+- dict_creation.sh - constructs a .dict file for the provided reference genome .fa data;
 - download_SNU601.sh - downloads the SNU601 WGS data in the .fastq format;
 - cellranger_atac_SNU601.sh - downloads the scATAC-seq data in the .fastq format;
-
-- 
+### Alleloscope data preparation
+- snv_calling_gatk.sh - gets the .vcf file with SNP info, using the reference genome .fa file and the .bam file of the scATAC-data;
+- snv_calling_gatk_hc_only.sh - a shorter version of the above script, only including the HaplotypeCaller command. Useful for saving time rerunning the script in case of HaplotypeCaller errors;
+- vcf_sep_gatk.py - splits the .vcf output of the snv_calling_gatk.sh by chromosome, producing a number of smaller .vcf files;
+- vartrix.sh - gets SNP-by-cell matrices (alt_all.rds, ref_all.rds, var_all.rds) for each chromosome using per-chromosome .vcf files;
+- Cbn_matrix.R - an R function to merge per-chromosome SNP-by-cell matrices into whole-genome forms. **Technical file, sourced in the next script**;
+- Cbn_matrix_server_paths.R - uses the function above and allows to set the paths to inputs/outputs for the server;
+- Signac_gen_bin_cell.R - creates the bin-by-cell matric using Signac, using chrom_sizes.txt, barcodes.tsv.gz, and fragments.tsv.gz files;
+- Gen_bin_cell_atac.R - old script for the same task as Signac_gen_bin_cell.R. **Not used anymore, ignore this file**;
