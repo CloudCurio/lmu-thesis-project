@@ -1,4 +1,4 @@
-#this script plots emission distributions for models
+#this script plots posterior distributions for models
 
 library(depmixS4)
 
