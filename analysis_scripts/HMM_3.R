@@ -16,6 +16,12 @@ library(pROC)
 library(ggpubr)
 
 ###############################################################################
+# Load functions
+###############################################################################
+
+source("C:\\Users\\liber\\Documents\\GitHub\\lmu-thesis-project\\analysis_scripts\\by_cell_plotter.R")
+
+###############################################################################
 # Define settings values
 ###############################################################################
 
@@ -30,8 +36,8 @@ models_to_test <- c("counts", "counts_and_theta", "counts_and_theta_imp")
 #TODO: implement it in the code
 cnv_state_vector <- c("loss", "base", "gain")
 
-input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_500kb_100nSNP"
-output_dir <- paste("..//..//HMM outputs//Alleloscope_500kb_100nSNP//", "3_state_model//", sep = "")
+input_dir <- "C:\\Users\\liber\\Desktop\\Study\\LMU\\Thesis Project - MariaCT's Lab\\Data\\HMM inputs\\Alleloscope_1mb_100nSNP"
+output_dir <- paste("..//..//HMM outputs//Alleloscope_1mb_100nSNP//", "3_state_model//", sep = "")
 
 dir.create(output_dir)
 
@@ -894,3 +900,9 @@ combined_plot <- ggarrange(p, p_wgs + labs(title = NULL) + theme(legend.position
 
 ggsave(paste(output_dir, "epiAneufinder_karyogram.pdf", sep = ""), 
        plot = combined_plot, width = 40, height = 20, units = "cm")
+
+################################################################################
+# Make a pdf with per-cell plots
+################################################################################
+
+per_cell_summary(models, output_dir)
